@@ -67,6 +67,27 @@ function getTodayIndex(): number {
   return jsDay === 0 ? 6 : jsDay - 1;
 }
 
+function getLocationStatus(activeDay: number, todayIndex: number) {
+  if (activeDay === todayIndex) {
+    return {
+      label: "Open Now",
+      dotClassName: "bg-green-600",
+    };
+  }
+
+  if (activeDay < todayIndex) {
+    return {
+      label: "Closed",
+      dotClassName: "bg-red-500",
+    };
+  }
+
+  return {
+    label: "Coming",
+    dotClassName: "bg-amber",
+  };
+}
+
 export default function WeeklyLocations() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -74,6 +95,7 @@ export default function WeeklyLocations() {
   const [activeDay, setActiveDay] = useState(todayIndex);
 
   const current = LOCATIONS[activeDay];
+  const currentStatus = getLocationStatus(activeDay, todayIndex);
 
   return (
     <section id="find-us-today" ref={ref} className="relative py-24 md:py-32 bg-foam overflow-hidden">
@@ -164,9 +186,13 @@ export default function WeeklyLocations() {
                     </h3>
                   </div>
                   <div className="hidden md:flex items-center gap-2 bg-espresso/5 px-4 py-2 rounded-full">
-                    <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
+                    <div
+                      className={`w-2 h-2 rounded-full ${currentStatus.dotClassName} ${
+                        activeDay === todayIndex ? "animate-pulse" : ""
+                      }`}
+                    />
                     <span className="font-body text-xs text-espresso/60">
-                      {activeDay === todayIndex ? "Open Now" : "Scheduled"}
+                      {currentStatus.label}
                     </span>
                   </div>
                 </div>
@@ -208,12 +234,6 @@ export default function WeeklyLocations() {
                       <circle cx="12" cy="10" r="3" />
                     </svg>
                     Get Directions
-                  </a>
-                  <a
-                    href="#"
-                    className="inline-flex items-center gap-2 px-6 py-3 border border-espresso/20 text-espresso font-body text-sm uppercase tracking-[0.15em] rounded-full hover:bg-espresso/5 transition-colors duration-300"
-                  >
-                    Set Reminder
                   </a>
                 </div>
               </div>

@@ -5,7 +5,7 @@ import CoffeeMenu from "@/components/CoffeeMenu";
 
 export default function Home() {
   return (
-    <main className="bg-cream min-h-screen w-full">
+    <main className="bg-cream min-h-[100svh] w-full">
       <CoffeeScroll />
       <CartShowcase />
       <WeeklyLocations />

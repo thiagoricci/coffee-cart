@@ -394,7 +394,7 @@ export default function CoffeeScroll() {
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[1100vh] md:h-[800vh]"
+      className="relative w-full h-[1100svh] md:h-[800vh]"
     >
       <div className="sticky top-0 z-20 h-screen min-h-[100svh] w-full">
         <div className="relative h-full w-full overflow-hidden bg-cream">
