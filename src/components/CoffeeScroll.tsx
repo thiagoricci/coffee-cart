@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 
 const FRAME_COUNT = 40;
-const SCROLL_HEIGHT = 800;
 const LOADING_TIMEOUT_MS = 3500;
 
 function getFramePath(index: number): string {
@@ -163,9 +162,9 @@ const TEXT_SECTIONS: TextSection[] = [
     ),
   },
   {
-    startFadeIn: 0.50,
-    startHold: 0.55,
-    startFadeOut: 0.90,
+    startFadeIn: 0.47,
+    startHold: 0.53,
+    startFadeOut: 0.94,
     endFadeOut: 1.0,
     position: "center" as const,
     content: (
@@ -395,8 +394,7 @@ export default function CoffeeScroll() {
   return (
     <div
       ref={containerRef}
-      className="relative w-full"
-      style={{ height: `${SCROLL_HEIGHT}vh` }}
+      className="relative w-full h-[1100vh] md:h-[800vh]"
     >
       <div className="sticky top-0 z-20 h-screen min-h-[100svh] w-full">
         <div className="relative h-full w-full overflow-hidden bg-cream">
