@@ -237,6 +237,13 @@ export default function CoffeeScroll() {
   const [isLoaded, setIsLoaded] = useState(false);
   const currentFrameRef = useRef(0);
 
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
