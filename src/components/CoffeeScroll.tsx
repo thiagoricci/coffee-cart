@@ -241,8 +241,21 @@ export default function CoffeeScroll() {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    const reset = () => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    };
+    reset();
+    requestAnimationFrame(reset);
+  }, [isLoaded]);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
