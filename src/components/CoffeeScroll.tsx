@@ -246,15 +246,40 @@ export default function CoffeeScroll() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
+  // Lock body scroll during loading to prevent mobile jump
+  useEffect(() => {
+    if (!isLoaded) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isLoaded]);
+
+  // Reset scroll aggressively after content mounts
   useEffect(() => {
     if (!isLoaded) return;
+
+    // Temporarily disable smooth scroll so the reset is instant
+    const prev = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'auto';
+
     const reset = () => {
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      window.scrollTo(0, 0);
     };
     reset();
-    requestAnimationFrame(reset);
+    requestAnimationFrame(() => {
+      reset();
+      requestAnimationFrame(() => {
+        reset();
+        // Restore smooth scrolling after DOM has settled
+        document.documentElement.style.scrollBehavior = prev;
+      });
+    });
   }, [isLoaded]);
 
   const { scrollYProgress } = useScroll({
