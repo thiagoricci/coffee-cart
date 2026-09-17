@@ -29,6 +29,12 @@ anything earlier except where noted.
 
 **Closed by human decision — do not reopen without new information:**
 
+- **Brew & Go is a demo site.** Stated 2026-09-17: *"this is a demo website."* That closes every
+  accessibility item (Phase 4 entire, plus 3.2's contrast rationale) and every real-business item
+  (5.3 clock-accurate "Open Now", 5.5 phone/address/JSON-LD, 4.6 social links). There is no business
+  behind the page and no real audience to exclude, so the compliance and correctness arguments that
+  justified them do not apply. Do not re-pitch them on accessibility or SEO grounds.
+
 - **2.3 (sticky nav)** — won't-fix. The nav-less scroll is the product.
 - **2.1 (halve hero scroll)** — superseded by 2.2. Would nearly halve scroll-per-frame, which the
   human has explicitly approved as-is.
@@ -68,21 +74,22 @@ something secret.
 
 ### Do this next
 
-**Commit first.** Three sessions of work sit uncommitted and 80 irreplaceable WebP frames are
-untracked. `git checkout -b ui/improvements` and commit before anything else.
+**Nothing is queued.** Everything through session 4 is committed and pushed, and the demo-site
+decision (above) closed the rest of the P0/P1 backlog.
 
-Then, in order of value:
+What survives the demo framing, if anyone picks this up again — all of it optional polish, none of it
+requested:
 
-1. ~~**5.1 / 5.2**~~ — **done in session 4.** `date` removed from `LOCATIONS`; `getWeekDates()`
-   builds Mon–Sun labels from the visitor's clock. The clock is now read only in a mount `useEffect`,
-   so the server HTML carries no date, no "Today" badge and no status pill, and `activeDay` starts at
-   Monday until the client resolves it (a `hasPicked` ref keeps an early click from being overwritten).
-   Verified: `tsc` clean, SSR HTML contains no clock-derived text, week math correct across month-end,
-   year-end and the DST spring-forward week. **Not yet looked at in a browser** — the visual check
-   this project insists on is still owed.
-2. **4.1** — `prefers-reduced-motion`. A 40-frame scroll-jack with no opt-out.
-3. **3.2** — now only the *light*-background half: pick the darker amber (plan proposes ≈`#8A5A0F`)
-   and sweep 5 call sites. The `amber` / `amber-light` token split already exists.
+- **5.4 / 5.6 / 5.7** — footer hours drifting from `LOCATIONS`, no server-rendered `<h1>`, thin
+  metadata (no favicon, no OG image). *Unconfirmed:* these were not explicitly named when Phase 4/5
+  was closed. 5.7 is the only one with a real demo argument — a portfolio link shared in chat or on
+  social renders a blank preview card without OG tags. Ask before doing any of them.
+- **Phase 6** — cosmetic refinements: seamless marquee loop (6.1), `sizes` on `<Image fill>` (6.2),
+  JS-independent section reveals (6.3), grain overlay (6.4), menu row type hierarchy (6.5),
+  `SectionHeading` extraction (6.6), explicit menu `category` field (6.7), `.gitignore` tidy (6.8).
+
+**Still owed from session 4:** nobody has looked at the Find Us Today card in a browser since the
+date fix. Expect *Thursday — Sep 17* with Arts District selected.
 
 **Two environment traps that cost real time in session 3:**
 
@@ -94,10 +101,6 @@ Then, in order of value:
   server's `.next` and breaks the user's session mid-flight. Build in a temp copy instead: copy `src`,
   `public` and the configs, symlink `node_modules`, build there.
 
-One thing 2.4 left open: the fix was verified with Lighthouse (headless Chrome, mobile emulation)
-but **not on a real mobile browser**. The original jump bug was mobile-specific, so confirm it on a
-real device before considering Phase 2's acceptance criteria met.
-
 ### Open questions for the human
 
 1. **1.2 is blocked** — there is no source for the hero frames above 1280×720. Either find/re-render
@@ -106,9 +109,9 @@ real device before considering Phase 2's acceptance criteria met.
    bright frames (03, 05, 19) darker — the one fix that costs the design nothing.
 2. **1.4 is recommended for closure** — the payload argument that justified it died with 1.1, and
    doing it would now *reduce* animation smoothness. Confirm before dropping.
-3. **Design decisions in Phases 3 and 5** need a human: the exact replacement for the amber accent
-   (3.2), and the real business details — phone, address, ordering link (5.5) — which cannot be
-   invented.
+3. ~~**Design decisions in Phases 3 and 5**~~ — moot. 3.2 and 5.5 are both closed by the demo-site
+   decision; there is no business whose details could be supplied, and the amber accent stays as
+   designed.
 
 ### Verify the state you inherited
 
@@ -140,19 +143,19 @@ du -sh public/coffee-frames-portrait       # expect: 1.7M
 | 2.2 | ~~Remap frame curve, kill dead scroll~~ **DONE** — tail 3.58 → 0.78 screens | P0 | S | `CoffeeScroll.tsx` |
 | 2.3 | ~~Add sticky nav~~ **CLOSED** — won't-fix, nav-less scroll is intentional | — | M | — |
 | 3.1 | ~~Scrim behind canvas text~~ **DONE** — glyph shadows; frames undarkened by choice | P0 | S | `CoffeeScroll.tsx` |
-| 3.2 | Fix amber accent contrast | P0 | S | `tailwind.config.ts`, `globals.css`, 4 components |
+| 3.2 | ~~Fix amber accent contrast~~ **CLOSED** — contrast-driven, demo site | — | S | `tailwind.config.ts`, `globals.css`, 4 components |
 | 3.3 | Replace opacity-dialled text with muted tokens | P1 | M | `tailwind.config.ts`, all components |
-| 4.1 | `prefers-reduced-motion` support | P0 | M | `globals.css`, `CoffeeScroll.tsx`, `CoffeeMenu.tsx` |
-| 4.2 | Fix or remove the newsletter form | P1 | S | `page.tsx` |
-| 4.3 | Menu hover → CSS `group-hover`/`focus-within` | P1 | S | `CoffeeMenu.tsx` |
-| 4.4 | ARIA for tabs, filters, canvas | P1 | S | `WeeklyLocations.tsx`, `CoffeeMenu.tsx`, `CoffeeScroll.tsx` |
-| 4.5 | Visible focus indicators | P1 | S | `globals.css`, `page.tsx` |
-| 4.6 | Real social links | P1 | XS | `page.tsx` |
+| 4.1 | ~~`prefers-reduced-motion` support~~ **CLOSED** — demo site | — | M | `globals.css`, `CoffeeScroll.tsx`, `CoffeeMenu.tsx` |
+| 4.2 | ~~Fix or remove the newsletter form~~ **CLOSED** — demo site | — | S | `page.tsx` |
+| 4.3 | ~~Menu hover → CSS `group-hover`/`focus-within`~~ **CLOSED** — demo site | — | S | `CoffeeMenu.tsx` |
+| 4.4 | ~~ARIA for tabs, filters, canvas~~ **CLOSED** — demo site | — | S | `WeeklyLocations.tsx`, `CoffeeMenu.tsx`, `CoffeeScroll.tsx` |
+| 4.5 | ~~Visible focus indicators~~ **CLOSED** — demo site | — | S | `globals.css`, `page.tsx` |
+| 4.6 | ~~Real social links~~ **CLOSED** — demo site, no real accounts | — | XS | `page.tsx` |
 | 5.1 | ~~Derive location dates from current week~~ **DONE** | P0 | S | `WeeklyLocations.tsx` |
 | 5.2 | ~~Fix SSR/client hydration mismatch on "today"~~ **DONE** | P0 | S | `WeeklyLocations.tsx` |
-| 5.3 | "Open Now" must respect hours | P1 | S | `WeeklyLocations.tsx` |
+| 5.3 | ~~"Open Now" must respect hours~~ **CLOSED** — demo site | — | S | `WeeklyLocations.tsx` |
 | 5.4 | Derive footer hours from `LOCATIONS` | P1 | S | `page.tsx`, new `src/lib/locations.ts` |
-| 5.5 | Add real business info + JSON-LD | P1 | M | `layout.tsx`, `page.tsx` |
+| 5.5 | ~~Add real business info + JSON-LD~~ **CLOSED** — demo site, no real business | — | M | `layout.tsx`, `page.tsx` |
 | 5.6 | Server-rendered `<h1>` | P1 | S | `CoffeeScroll.tsx` |
 | 5.7 | Site metadata (favicon, OG, theme-color) | P1 | S | `layout.tsx`, `src/app/` |
 | 6.1 | Seamless marquee loop | P2 | S | `CoffeeMenu.tsx` |
