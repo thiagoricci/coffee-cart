@@ -1,12 +1,11 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const LOCATIONS = [
   {
     day: "Monday",
-    date: "Apr 14",
     location: "Downtown Business District",
     address: "Corner of Main & 3rd St",
     hours: "7:00 AM — 2:00 PM",
@@ -14,7 +13,6 @@ const LOCATIONS = [
   },
   {
     day: "Tuesday",
-    date: "Apr 15",
     location: "Riverside Park",
     address: "North Entrance, by the Fountain",
     hours: "7:00 AM — 1:00 PM",
@@ -22,7 +20,6 @@ const LOCATIONS = [
   },
   {
     day: "Wednesday",
-    date: "Apr 16",
     location: "University Campus",
     address: "Central Quad, near Library",
     hours: "7:00 AM — 3:00 PM",
@@ -30,7 +27,6 @@ const LOCATIONS = [
   },
   {
     day: "Thursday",
-    date: "Apr 17",
     location: "Arts District",
     address: "Gallery Row, 5th & Elm",
     hours: "8:00 AM — 2:00 PM",
@@ -38,7 +34,6 @@ const LOCATIONS = [
   },
   {
     day: "Friday",
-    date: "Apr 18",
     location: "Harbor Square",
     address: "Waterfront Promenade",
     hours: "7:00 AM — 2:00 PM",
@@ -46,7 +41,6 @@ const LOCATIONS = [
   },
   {
     day: "Saturday",
-    date: "Apr 19",
     location: "Farmers Market",
     address: "Oak Street Market Grounds",
     hours: "7:00 AM — 1:00 PM",
@@ -54,7 +48,6 @@ const LOCATIONS = [
   },
   {
     day: "Sunday",
-    date: "Apr 20",
     location: "Beachfront Promenade",
     address: "Lifeguard Tower 5",
     hours: "8:00 AM — 12:00 PM",
@@ -62,12 +55,35 @@ const LOCATIONS = [
   },
 ];
 
-function getTodayIndex(): number {
-  const jsDay = new Date().getDay();
+/** Monday-first index (0 = Monday … 6 = Sunday) for a given date. */
+function getDayIndex(now: Date): number {
+  const jsDay = now.getDay();
   return jsDay === 0 ? 6 : jsDay - 1;
 }
 
-function getLocationStatus(activeDay: number, todayIndex: number) {
+/** "Apr 14"-style labels for Monday…Sunday of the week containing `now`. */
+function getWeekDates(now: Date): string[] {
+  const monday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() - getDayIndex(now)
+  );
+
+  return LOCATIONS.map((_, i) => {
+    const date = new Date(
+      monday.getFullYear(),
+      monday.getMonth(),
+      monday.getDate() + i
+    );
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  });
+}
+
+function getLocationStatus(activeDay: number, todayIndex: number | null) {
+  if (todayIndex === null) {
+    return null;
+  }
+
   if (activeDay === todayIndex) {
     return {
       label: "Open Now",
@@ -91,8 +107,27 @@ function getLocationStatus(activeDay: number, todayIndex: number) {
 export default function WeeklyLocations() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const todayIndex = getTodayIndex();
-  const [activeDay, setActiveDay] = useState(todayIndex);
+
+  // The clock is read on the client only: reading it during render would make SSR
+  // (server timezone) and hydration (visitor timezone) disagree across midnight.
+  const [todayIndex, setTodayIndex] = useState<number | null>(null);
+  const [weekDates, setWeekDates] = useState<string[] | null>(null);
+  const [activeDay, setActiveDay] = useState(0);
+  const hasPicked = useRef(false);
+
+  useEffect(() => {
+    const now = new Date();
+    setTodayIndex(getDayIndex(now));
+    setWeekDates(getWeekDates(now));
+    if (!hasPicked.current) {
+      setActiveDay(getDayIndex(now));
+    }
+  }, []);
+
+  const selectDay = (i: number) => {
+    hasPicked.current = true;
+    setActiveDay(i);
+  };
 
   const current = LOCATIONS[activeDay];
   const currentStatus = getLocationStatus(activeDay, todayIndex);
@@ -129,7 +164,7 @@ export default function WeeklyLocations() {
               {LOCATIONS.map((loc, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveDay(i)}
+                  onClick={() => selectDay(i)}
                   className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 group ${
                     activeDay === i
                       ? "bg-espresso text-cream"
@@ -179,22 +214,25 @@ export default function WeeklyLocations() {
                 <div className="flex items-start justify-between mb-8">
                   <div>
                     <p className="font-body text-xs uppercase tracking-[0.3em] text-amber">
-                      {current.day} — {current.date}
+                      {current.day}
+                      {weekDates ? ` — ${weekDates[activeDay]}` : ""}
                     </p>
                     <h3 className="font-display text-3xl md:text-4xl text-espresso tracking-tight mt-2">
                       {current.location}
                     </h3>
                   </div>
-                  <div className="hidden md:flex items-center gap-2 bg-espresso/5 px-4 py-2 rounded-full">
-                    <div
-                      className={`w-2 h-2 rounded-full ${currentStatus.dotClassName} ${
-                        activeDay === todayIndex ? "animate-pulse" : ""
-                      }`}
-                    />
-                    <span className="font-body text-xs text-espresso/60">
-                      {currentStatus.label}
-                    </span>
-                  </div>
+                  {currentStatus && (
+                    <div className="hidden md:flex items-center gap-2 bg-espresso/5 px-4 py-2 rounded-full">
+                      <div
+                        className={`w-2 h-2 rounded-full ${currentStatus.dotClassName} ${
+                          activeDay === todayIndex ? "animate-pulse" : ""
+                        }`}
+                      />
+                      <span className="font-body text-xs text-espresso/60">
+                        {currentStatus.label}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
