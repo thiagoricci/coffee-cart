@@ -66,6 +66,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
+      <head>
+        {/*
+          The hero is a scroll-driven sequence that only makes sense from the
+          top, but the page is ~12,600 px tall, so a reload — or a phone
+          restoring a backgrounded tab — drops the visitor wherever they last
+          were, usually mid Find Us Today. Opting out of restoration has to
+          happen while the document parses: an effect runs after the browser has
+          already jumped, which shows as a flash of the wrong section.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if("scrollRestoration" in history)history.scrollRestoration="manual";`,
+          }}
+        />
+      </head>
       <body className="font-body grain-overlay">{children}</body>
     </html>
   );
