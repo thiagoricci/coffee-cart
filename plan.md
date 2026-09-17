@@ -13,7 +13,7 @@ anything earlier except where noted.
 
 ## START HERE — session handoff
 
-**Last updated:** 2026-09-17, end of session 5.
+**Last updated:** 2026-09-17, end of session 6.
 
 ### Where things stand
 
@@ -30,6 +30,11 @@ anything earlier except where noted.
 | Signature Serves (s5) | Hover/tap expansion with per-drink build diagrams; **closes 6.5 and 6.7** |
 | Find Us Today (s5) | Real Turlock-area coordinates, keyless OSM map, opt-in geolocation + distance |
 | Mobile (s5) | Tap-to-close bug fixed, map scroll-trap shielded, own tap targets ≥ 44 px |
+| 5.4 (s6) | Footer hours derived from `LOCATIONS` — the contradiction cannot come back |
+| 7.1 (s6) | Map degrades to a styled link card without WebGL; measured both ways |
+| 7.2 (s6) | `npm test` — 14 `node --test` checks over the pour sums, coordinates and helpers |
+| 6.1 (s6) | Marquee seam gone: **0 px** error at 390, 1440 and 2560 |
+| 5.7 (s6) | Favicon, apple icon and a 1200×630 link card, generated from `tools/brand/` |
 
 **Closed by human decision — do not reopen without new information:**
 
@@ -50,7 +55,23 @@ anything earlier except where noted.
 
 ### Git state — read this before doing anything
 
-`main` is clean and in sync with `origin/main`. Five commits landed on 2026-09-17:
+⚠️ **`main` is clean but **7 commits ahead of `origin/main`** — session 6 has not been pushed.**
+Push when you are ready (`git push`), or hand the decision to the human; nothing else is outstanding.
+
+Session 6 (2026-09-17), newest first — the whole of Phase 7, plus session 5's work which arrived
+uncommitted and was committed first so the Phase 7 diffs stood on their own:
+
+```
+77499b1 feat(meta): add the favicon and a real link preview          5.7
+5a9fd45 fix(menu): loop the marquee without a seam                   6.1
+facb58a test: cover the pour sums, stop coordinates and hour helpers 7.2
+1f40dd5 fix(locations): fall back to a styled card when WebGL is missing  7.1
+5da0312 fix(footer): derive this week's hours from LOCATIONS         5.4
+3161fc8 docs(plan): record session 5 and open the Phase 7 queue
+2f1094f feat(menu,locations): expandable drink builds and a real Find Us Today card
+```
+
+Earlier, from session 4 (2026-09-17), already on `origin/main`:
 
 ```
 8313df3 docs(plan): close Phase 4, 3.2, 5.3 and 5.5 — demo site
@@ -84,28 +105,32 @@ something secret.
 
 ### Do this next
 
-**Phase 7 is queued** — five items, ordered, opened 2026-09-17 at the human's request after
-reviewing session 5's work. Read *Phase 7* below for the detail; the order is:
+**Nothing is queued.** Phase 7 — the five items the human asked for at the end of session 5 — was
+implemented in full in session 6, in the agreed order, each with its own commit and its own section
+in this file closed with the evidence:
 
-1. ~~**5.4** — footer hours contradict `LOCATIONS`.~~ **DONE** 2026-09-17 (session 6) — the footer
-   now renders `weeklyHours()`; see 7.0.
-2. ~~**7.1** — the OSM map has no WebGL fallback.~~ **DONE** 2026-09-17 (session 6) — `useHasWebGL()`
-   swaps in a styled placeholder. **Start at 7.2.**
-3. ~~**7.2** — the session-5 invariants are untested.~~ **DONE** 2026-09-17 (session 6) —
-   `npm test` runs 14 `node --test` checks. **Start at 6.1.**
-4. ~~**6.1** — marquee seam.~~ **DONE** 2026-09-17 (session 6) — four copies, `-50%`, measured
-   exact at 390/1440/2560. **Start at 5.7 — it is the last item in the queue.**
-5. ~~**5.7** — favicon and OG tags.~~ **DONE** 2026-09-17 (session 6).
+| Item | Commit | Outcome |
+|---|---|---|
+| 5.4 | `5da0312` | `weeklyHours()` groups the stops; the footer renders it and cannot drift |
+| 7.1 | `1f40dd5` | `useHasWebGL()`; no WebGL → a styled link card, directions still reachable |
+| 7.2 | `facb58a` | `npm test`, 14 checks; both invariants confirmed to fail loudly |
+| 6.1 | `5a9fd45` | Four copies on a `w-max` track at `-50%`; 0 px error at three widths |
+| 5.7 | `77499b1` | Metadata + four generated PNGs; sources in `tools/brand/` |
 
-**Phase 7 is complete.** Nothing is queued. The open items left in this file are 5.6 (server-rendered
-`<h1>`) and the Phase 6 leftovers 6.2, 6.3, 6.4, 6.6 and 6.8 — none of them agreed work; ask before
-starting one.
+Every Phase 7 acceptance criterion is met — see *Acceptance criteria — Phase 7*.
 
-Session 5's work is committed as of session 6 (`2f1094f` for the code, `3161fc8` for this plan),
-so Phase 7 diffs stand on their own.
+**Before picking anything up, ask.** What is still open in this file is *not* agreed work:
 
-**Do not re-pitch** the items closed by the demo-site decision above. Phase 7 deliberately contains
-nothing from that list: 5.7 is queued on *demo-sharing* grounds (a link that previews blank
+- **5.6** — no server-rendered `<h1>` (the hero heading only exists after `isLoaded`). Note the
+  demo-site decision already closed the SEO argument for it; the honest case now is that the page
+  is blank without JS, which is really 6.3.
+- **6.2** `<Image fill>` without `sizes` · **6.3** content depends on JS · **6.4** the grain overlay's
+  cost · **6.6** four copies of the same section header · **6.8** repo hygiene.
+
+The one loose end from session 6 is that **the seven commits are not pushed** — see *Git state*.
+
+**Do not re-pitch** the items closed by the demo-site decision above. Phase 7 deliberately contained
+nothing from that list: 5.7 was taken on *demo-sharing* grounds (a link that previews blank
 undercuts the demo), explicitly **not** on SEO grounds.
 
 **Settled in session 5 — do not reopen:**
@@ -120,8 +145,8 @@ undercuts the demo), explicitly **not** on SEO grounds.
 - **Two menu cards can be open at once on desktop** (one pinned, one hovered). Judged a feature for
   comparing builds, not a defect.
 
-**Cleared from session 4:** the Find Us Today card *has* now been opened in a browser (session 5) and
-verified at desktop and 390 px. Note its content changed — expect *Thursday — Sep 17* with
+**Cleared from session 4:** the Find Us Today card *has* now been opened in a browser (sessions 5
+and 6) and verified at desktop and 390 px. Note its content changed — expect *Thursday — Sep 17* with
 **Downtown Turlock** selected, not "Arts District"; the placeholder stops were replaced with real
 Central Valley locations.
 
@@ -209,8 +234,8 @@ git rev-list --objects --all | grep -c ezgif   # expect: 0
 | 6.6 | Extract `SectionHeading` | P2 | S | new component, 4 call sites |
 | 6.7 | ~~Explicit `category` field on menu items~~ **DONE** 2026-09-17 | P2 | XS | `CoffeeMenu.tsx` |
 | 6.8 | Repo hygiene | P2 | XS | `.gitignore` |
-| 7.1 | Map has no WebGL fallback — **QUEUED 2nd** | P1 | S | `WeeklyLocations.tsx` |
-| 7.2 | Session-5 invariants untested, `tests/` empty — **QUEUED 3rd** | P1 | M | `tests/`, `package.json` |
+| 7.1 | ~~Map has no WebGL fallback~~ **DONE** 2026-09-17 (session 6) | P1 | S | `WeeklyLocations.tsx` |
+| 7.2 | ~~Session-5 invariants untested, `tests/` empty~~ **DONE** 2026-09-17 (session 6) | P1 | M | `tests/`, `package.json` |
 
 ~~**If only three things ship: 1.1, 2.1 + 2.3, and 3.2.**~~ — obsolete. 1.1 shipped, 2.1 was
 superseded by 2.2, and 2.3 and 3.2 were both closed by human decision. Nothing is queued; see
@@ -1110,15 +1135,18 @@ The eyebrow + `h2` + paragraph pattern is repeated in `CartShowcase.tsx:24-38`,
 
 - [ ] `.DS_Store` and `tsconfig.tsbuildinfo` are in the working tree. Add to `.gitignore` and
       `git rm --cached`.
-- [ ] `tests/` is still empty — 7.2 populates it. (`src/lib/` is populated as of session 5.)
+- [x] ~~`tests/` is empty~~ — populated by 7.2 (session 6). `src/lib/` was populated in session 5.
 
 ---
 
-## Phase 7 — Next implementation queue (opened 2026-09-17)
+## Phase 7 — implementation queue (opened 2026-09-17, CLOSED 2026-09-17)
 
 Queued at the human's request at the end of session 5, after the Signature Serves rework and the
 Find Us Today map landed and were reviewed. Ordered by value-to-effort. Two entries are existing
 items promoted into this queue rather than renumbered — follow their own sections for detail.
+
+**All five shipped in session 6.** The table below is the record; each row's own section holds the
+measurements.
 
 | Order | Item | Status | Priority | Effort | Files |
 |---|---|---|---|---|---|
@@ -1128,9 +1156,9 @@ items promoted into this queue rather than renumbered — follow their own secti
 | 4 | ~~**6.1** Seamless marquee loop~~ | **done** 2026-09-17 | P2 | S | `CoffeeMenu.tsx` |
 | 5 | ~~**5.7** Favicon and link metadata~~ | **done** 2026-09-17 | P2 | S | `layout.tsx`, `src/app/` |
 
-### 7.0 Start with 5.4 — its blocker is gone
+### 7.0 5.4 went first — its blocker was already gone
 
-Not a new item; recorded here because the reason it was parked no longer holds. 5.4's row named
+Not a new item; recorded here because the reason it had been parked no longer held. 5.4's row named
 "new `src/lib/locations.ts`" as a prerequisite, and **that file now exists** — created in session 5
 to hold the stop coordinates and geo helpers. It exports `LOCATIONS` with a typed `hours` field.
 
