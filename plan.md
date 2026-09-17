@@ -139,7 +139,8 @@ committed **and pushed**; the working tree is clean and `npm test`, `npx tsc --n
   the link preview follows. Until then the OG tags point at localhost. See 5.7.
 - **A `next dev` was left running on :3000**, started during session 6 after the inherited one was
   found serving 404 chunks. Log: `/tmp/claude-501/nextdev.log`. Kill it or reuse it, but check the
-  port before measuring anything — see [[next-build-breaks-running-dev]] in memory.
+  port before measuring anything: a dev server inherited from an earlier session can already be
+  serving 404 chunks, which looks like a component bug rather than a stale server.
 
 **Before picking anything up, ask.** What is still open in this file is *not* agreed work:
 
