@@ -88,8 +88,9 @@ something secret.
 reviewing session 5's work. Read *Phase 7* below for the detail; the order is:
 
 1. ~~**5.4** — footer hours contradict `LOCATIONS`.~~ **DONE** 2026-09-17 (session 6) — the footer
-   now renders `weeklyHours()`; see 7.0. **Start at 7.1.**
-2. **7.1** — the OSM map has no WebGL fallback; without WebGL the card shows OSM's own blue error.
+   now renders `weeklyHours()`; see 7.0.
+2. ~~**7.1** — the OSM map has no WebGL fallback.~~ **DONE** 2026-09-17 (session 6) — `useHasWebGL()`
+   swaps in a styled placeholder. **Start at 7.2.**
 3. **7.2** — the invariants added in session 5 are untested and `tests/` is still empty.
 4. **6.1** — marquee seam, at the top of the section session 5 just polished.
 5. **5.7** — favicon and OG tags, so the demo link doesn't preview blank.
@@ -1081,7 +1082,7 @@ items promoted into this queue rather than renumbered — follow their own secti
 | Order | Item | Status | Priority | Effort | Files |
 |---|---|---|---|---|---|
 | 1 | ~~**5.4** Footer hours contradict `LOCATIONS`~~ | **done** 2026-09-17 | P1 | S | `page.tsx`, `src/lib/locations.ts` |
-| 2 | **7.1** Map has no WebGL fallback | new 2026-09-17 | P1 | S | `WeeklyLocations.tsx` |
+| 2 | ~~**7.1** Map has no WebGL fallback~~ | **done** 2026-09-17 | P1 | S | `WeeklyLocations.tsx` |
 | 3 | **7.2** Session-5 invariants are untested | new 2026-09-17 | P1 | M | `tests/`, `package.json` |
 | 4 | **6.1** Seamless marquee loop | existing | P2 | S | `CoffeeMenu.tsx` |
 | 5 | **5.7** Favicon and link metadata | existing, re-framed | P2 | S | `layout.tsx`, `src/app/` |
@@ -1116,7 +1117,7 @@ Tue, Sat   7am — 1pm      Thursday   8am — 2pm
 Drift test, run against `next dev`: setting Tue/Wed/Thu to `7:00 AM — 2:00 PM` collapsed the footer
 to `Mon — Fri 7am — 2pm`, and `8:30 AM` on Sunday rendered as `8:30am — 12pm`. Reverted after.
 
-### 7.1 The map has no WebGL fallback (P1)
+### 7.1 The map has no WebGL fallback (P1) — DONE (2026-09-17)
 
 `WeeklyLocations.tsx` embeds `openstreetmap.org/export/embed.html`. That embed now **requires
 WebGL**: where WebGL is unavailable it renders its own blue panel reading *"your browser does not
@@ -1126,11 +1127,27 @@ Chrome with `--disable-gpu` reproduces it exactly, which is also the easiest way
 Rare on real devices, but it is a hole in a section that is otherwise defensive (the geolocation
 path degrades cleanly on deny, unsupported and timeout; this one does not degrade at all).
 
-- [ ] Probe once on mount: `!!document.createElement("canvas").getContext("webgl")`.
-- [ ] When absent, render a styled placeholder instead of the `<iframe>` — keep the address, the
-      `mapViewUrl()` link and the tap target; drop only the embed.
-- [ ] Test with `--disable-gpu` (fallback shows) and `--use-angle=swiftshader
-      --enable-unsafe-swiftshader` (real map shows).
+- [x] ~~Probe once on mount.~~ `useHasWebGL()` in `src/lib/useHasWebGL.ts`.
+- [x] ~~When absent, render a styled placeholder instead of the `<iframe>`.~~
+- [x] ~~Test with `--disable-gpu` and with software WebGL.~~
+
+**Done 2026-09-17 (session 6).** `useHasWebGL()` returns `boolean | null`; `null` means "not probed
+yet", so the embed stays put on the first paint and the common case never flashes a placeholder.
+When the probe comes back false, `WeeklyLocations.tsx` renders the whole map area as one link to
+`mapViewUrl()` — pin glyph, the stop's name, and *"This browser can't draw the map — open it on
+OpenStreetMap"*. It is a 220/280 px target, so it is also the tap target. The address, hours,
+"Open in a larger map" and Get Directions all stay where they were, so nothing is lost with the
+embed; the placeholder deliberately does **not** repeat the address that sits directly above it.
+
+Verified over CDP against `next dev` (headless Chrome 131, `~/.cache/puppeteer`):
+
+| Chrome flags | probe | rendered |
+|---|---|---|
+| `--disable-gpu` | `false` | placeholder, no iframe |
+| `--use-angle=swiftshader --enable-unsafe-swiftshader` | `true` | the OSM embed |
+
+> Gotcha: `--dump-dom` is useless for this — it captures before hydration, so the probe still reads
+> `null`. Drive the page over the DevTools protocol and evaluate after a few seconds instead.
 
 ### 7.2 Session-5 invariants are untested (P1)
 

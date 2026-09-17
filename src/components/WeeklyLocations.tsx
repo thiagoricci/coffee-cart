@@ -4,6 +4,7 @@ import { motion, useInView } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useCanHover } from "@/lib/useCanHover";
+import { useHasWebGL } from "@/lib/useHasWebGL";
 
 import {
   type Coords,
@@ -87,6 +88,10 @@ export default function WeeklyLocations() {
   // for; pointer devices scroll with the wheel and never need this.
   const canHover = useCanHover();
   const [mapActive, setMapActive] = useState(false);
+
+  // The OSM embed needs WebGL and renders its own error panel without it.
+  // `null` is "still probing" — keep the embed until we know otherwise.
+  const hasWebGL = useHasWebGL();
 
   const locateMe = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -253,25 +258,50 @@ export default function WeeklyLocations() {
 
                 <div className="mt-8">
                   <div className="relative rounded-xl overflow-hidden border border-latte/30 bg-latte/10">
-                    {/* Keyed on the stop so switching days reloads the embed. */}
-                    <iframe
-                      key={`${current.lat},${current.lng}`}
-                      title={`Map showing ${current.location}, ${current.city}`}
-                      src={mapEmbedUrl(current)}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      className="block w-full h-[220px] md:h-[280px]"
-                    />
-                    {!canHover && !mapActive && (
-                      <button
-                        type="button"
-                        onClick={() => setMapActive(true)}
-                        className="absolute inset-0 flex items-start justify-center pt-4 bg-espresso/5"
+                    {hasWebGL === false ? (
+                      // No WebGL: show the stop ourselves rather than let the
+                      // embed paint its own error panel inside the card.
+                      <a
+                        href={mapViewUrl(current)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-[220px] md:h-[280px] flex-col items-center justify-center gap-2 px-6 text-center bg-latte/20 hover:bg-latte/30 transition-colors duration-300"
                       >
-                        <span className="font-body text-[11px] uppercase tracking-[0.15em] text-espresso/70 bg-cream/95 px-4 py-2 rounded-full shadow-sm">
-                          Tap to move the map
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber">
+                          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        <span className="font-body text-base text-espresso/80">
+                          {current.location}
                         </span>
-                      </button>
+                        <span className="font-body text-sm text-walnut/50 max-w-xs">
+                          This browser can&apos;t draw the map — open it on
+                          OpenStreetMap &#8599;
+                        </span>
+                      </a>
+                    ) : (
+                      <>
+                        {/* Keyed on the stop so switching days reloads the embed. */}
+                        <iframe
+                          key={`${current.lat},${current.lng}`}
+                          title={`Map showing ${current.location}, ${current.city}`}
+                          src={mapEmbedUrl(current)}
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          className="block w-full h-[220px] md:h-[280px]"
+                        />
+                        {!canHover && !mapActive && (
+                          <button
+                            type="button"
+                            onClick={() => setMapActive(true)}
+                            className="absolute inset-0 flex items-start justify-center pt-4 bg-espresso/5"
+                          >
+                            <span className="font-body text-[11px] uppercase tracking-[0.15em] text-espresso/70 bg-cream/95 px-4 py-2 rounded-full shadow-sm">
+                              Tap to move the map
+                            </span>
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                   <a
