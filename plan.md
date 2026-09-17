@@ -55,10 +55,8 @@ anything earlier except where noted.
 
 ### Git state — read this before doing anything
 
-⚠️ **`main` is clean but ahead of `origin/main` — session 6 has not been pushed.** Eight commits at
-the time of writing: the seven listed below plus the one carrying this update. Check with
-`git status -sb`. Push when you are ready (`git push`), or hand the decision to the human; nothing
-else is outstanding.
+`main` is clean and **in sync with `origin/main`** — session 6 was pushed on 2026-09-17 at the
+human's go-ahead, ten commits in one push (`acd7659..6415a43`), no force, no history rewrite.
 
 Session 6 (2026-09-17), newest first — the whole of Phase 7, plus session 5's work which arrived
 uncommitted and was committed first so the Phase 7 diffs stood on their own:
@@ -128,8 +126,6 @@ Every Phase 7 acceptance criterion is met — see *Acceptance criteria — Phase
   is blank without JS, which is really 6.3.
 - **6.2** `<Image fill>` without `sizes` · **6.3** content depends on JS · **6.4** the grain overlay's
   cost · **6.6** four copies of the same section header · **6.8** repo hygiene.
-
-The one loose end from session 6 is that **its commits are not pushed** — see *Git state*.
 
 **Do not re-pitch** the items closed by the demo-site decision above. Phase 7 deliberately contained
 nothing from that list: 5.7 was taken on *demo-sharing* grounds (a link that previews blank
