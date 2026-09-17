@@ -35,6 +35,7 @@ anything earlier except where noted.
 | 7.2 (s6) | `npm test` — 14 `node --test` checks over the pour sums, coordinates and helpers |
 | 6.1 (s6) | Marquee seam gone: **0 px** error at 390, 1440 and 2560 |
 | 5.7 (s6) | Favicon, apple icon and a 1200×630 link card, generated from `tools/brand/` |
+| 8.1 (s6) | Page always opens at the hero — browser scroll restoration turned off |
 
 **Closed by human decision — do not reopen without new information:**
 
@@ -105,7 +106,8 @@ something secret.
 
 ### Do this next
 
-**Nothing is queued.** Phase 7 — the five items the human asked for at the end of session 5 — was
+**Nothing is queued.** One bug arrived after Phase 7 closed and was fixed the same session — see
+*Phase 8*. Phase 7 — the five items the human asked for at the end of session 5 — was
 implemented in full in session 6, in the agreed order, each with its own commit and its own section
 in this file closed with the evidence:
 
@@ -1271,6 +1273,36 @@ and TypeScript rejects it otherwise. Safe here because the project is `noEmit`.
 - [x] The site has a favicon and a non-blank link preview.
 
 Commits, in order: `5da0312` (5.4), `1f40dd5` (7.1), `facb58a` (7.2), `5a9fd45` (6.1), and 5.7.
+
+---
+
+## Phase 8 — reported issues
+
+Things the human hit on a real device, rather than items found by review. Newest first.
+
+### 8.1 The page opened on Find Us Today, not the hero — FIXED (2026-09-17)
+
+Reported from a phone: *"the landing page loads on the Find Us today section instead of the Hero
+section."*
+
+**Cause: the browser's own scroll restoration, not our code.** Nothing in `src/` scrolls or focuses
+anything — the page is simply ~12,600 px tall at 390 px, so a reload, or a phone waking a
+backgrounded tab, returns the visitor to their last offset. That is ordinary browser behaviour and
+desirable on a normal page; it is wrong here, because the hero is a scroll-driven canvas sequence
+whose first frame is the landing experience.
+
+Reproduced at 390 px over CDP: scroll to Find Us (8012 px), reload → the page came back at **8051**,
+settling at 8012. A first load in a fresh tab was always 0, which is why this never showed up in
+review.
+
+**Fix:** `src/app/layout.tsx` sets `history.scrollRestoration = "manual"` from an inline `<script>`
+in `<head>`. It has to run while the document parses — an effect runs after the browser has already
+jumped, so the visitor sees the wrong section flash past before it corrects. After the fix the same
+reload lands at **0** at both 390 and 1280 px.
+
+**Trade-off, accepted:** browser-restored scroll is now off for the whole site, so a *back*
+navigation into the page also opens at the top. Nothing in the flow relies on that — every outbound
+link (directions, the OSM map) opens in a new tab.
 
 ---
 
