@@ -87,15 +87,15 @@ something secret.
 **Phase 7 is queued** — five items, ordered, opened 2026-09-17 at the human's request after
 reviewing session 5's work. Read *Phase 7* below for the detail; the order is:
 
-1. **5.4** — footer hours contradict `LOCATIONS`. The only factual error a visitor can see, and its
-   stated prerequisite (`src/lib/locations.ts`) now exists. Start here.
+1. ~~**5.4** — footer hours contradict `LOCATIONS`.~~ **DONE** 2026-09-17 (session 6) — the footer
+   now renders `weeklyHours()`; see 7.0. **Start at 7.1.**
 2. **7.1** — the OSM map has no WebGL fallback; without WebGL the card shows OSM's own blue error.
 3. **7.2** — the invariants added in session 5 are untested and `tests/` is still empty.
 4. **6.1** — marquee seam, at the top of the section session 5 just polished.
 5. **5.7** — favicon and OG tags, so the demo link doesn't preview blank.
 
-Session 5 changes are **uncommitted** — `CoffeeMenu.tsx`, `WeeklyLocations.tsx` and a new `src/lib/`
-are in the working tree. Commit them before starting Phase 7 so its diffs stay separate.
+Session 5's work is committed as of session 6 (`2f1094f` for the code, `3161fc8` for this plan),
+so Phase 7 diffs stand on their own.
 
 **Do not re-pitch** the items closed by the demo-site decision above. Phase 7 deliberately contains
 nothing from that list: 5.7 is queued on *demo-sharing* grounds (a link that previews blank
@@ -189,7 +189,7 @@ git rev-list --objects --all | grep -c ezgif   # expect: 0
 | 5.1 | ~~Derive location dates from current week~~ **DONE** | P0 | S | `WeeklyLocations.tsx` |
 | 5.2 | ~~Fix SSR/client hydration mismatch on "today"~~ **DONE** | P0 | S | `WeeklyLocations.tsx` |
 | 5.3 | ~~"Open Now" must respect hours~~ **CLOSED** — demo site | — | S | `WeeklyLocations.tsx` |
-| 5.4 | Derive footer hours from `LOCATIONS` — **QUEUED 1st**, unblocked: `src/lib/locations.ts` now exists | P1 | S | `page.tsx`, `src/lib/locations.ts` |
+| 5.4 | ~~Derive footer hours from `LOCATIONS`~~ **DONE** 2026-09-17 (session 6) | P1 | S | `page.tsx`, `src/lib/locations.ts` |
 | 5.5 | ~~Add real business info + JSON-LD~~ **CLOSED** — demo site, no real business | — | M | `layout.tsx`, `page.tsx` |
 | 5.6 | Server-rendered `<h1>` | P1 | S | `CoffeeScroll.tsx` |
 | 5.7 | Site metadata (favicon, OG, theme-color) — **QUEUED 5th** | P2 | S | `layout.tsx`, `src/app/` |
@@ -962,7 +962,7 @@ At 3am on a Wednesday the card still says "Open Now" with a pulsing green dot
 - [ ] Rename the past-day label — Monday is not "Closed", it has already happened. "Past" or a
       neutral dot reads better.
 
-### 5.4 Footer hours contradict the locations data (P1) — UNBLOCKED, queued 1st
+### 5.4 Footer hours contradict the locations data (P1) — DONE (2026-09-17)
 
 Footer says Mon–Fri 7am–2pm (`page.tsx:44`), but Wednesday is 7–3 and Thursday is 8–2. Still true as
 of 2026-09-17; session 5 changed the stops but kept every day's hours, so the contradiction is
@@ -970,8 +970,8 @@ unchanged rather than newly introduced.
 
 - [x] ~~Move `LOCATIONS` into `src/lib/locations.ts` (the directory exists and is empty).~~ **DONE**
       2026-09-17 (session 5) — the file now also holds the `Stop` type and the geo helpers.
-- [ ] Derive the footer hours from it so the two cannot drift. **This is the whole remaining task**;
-      see *Phase 7 / 7.0*.
+- [x] ~~Derive the footer hours from it so the two cannot drift.~~ **DONE** 2026-09-17 (session 6)
+      — `weeklyHours()` in `src/lib/locations.ts`, rendered by `page.tsx`. See 7.0 for the outcome.
 
 ### 5.5 No real business information — CLOSED (demo site)
 
@@ -1068,7 +1068,7 @@ The eyebrow + `h2` + paragraph pattern is repeated in `CartShowcase.tsx:24-38`,
 
 - [ ] `.DS_Store` and `tsconfig.tsbuildinfo` are in the working tree. Add to `.gitignore` and
       `git rm --cached`.
-- [ ] `tests/` and `src/lib/` exist but are empty — populate (5.4 uses `src/lib/`) or remove.
+- [ ] `tests/` is still empty — 7.2 populates it. (`src/lib/` is populated as of session 5.)
 
 ---
 
@@ -1080,7 +1080,7 @@ items promoted into this queue rather than renumbered — follow their own secti
 
 | Order | Item | Status | Priority | Effort | Files |
 |---|---|---|---|---|---|
-| 1 | **5.4** Footer hours contradict `LOCATIONS` | unblocked 2026-09-17 | P1 | S | `page.tsx`, `src/lib/locations.ts` |
+| 1 | ~~**5.4** Footer hours contradict `LOCATIONS`~~ | **done** 2026-09-17 | P1 | S | `page.tsx`, `src/lib/locations.ts` |
 | 2 | **7.1** Map has no WebGL fallback | new 2026-09-17 | P1 | S | `WeeklyLocations.tsx` |
 | 3 | **7.2** Session-5 invariants are untested | new 2026-09-17 | P1 | M | `tests/`, `package.json` |
 | 4 | **6.1** Seamless marquee loop | existing | P2 | S | `CoffeeMenu.tsx` |
@@ -1095,9 +1095,26 @@ to hold the stop coordinates and geo helpers. It exports `LOCATIONS` with a type
 The contradiction is live and visible: the footer claims `Mon — Fri 7am — 2pm`, while the data says
 Wednesday is `7:00 AM — 3:00 PM` and Thursday is `8:00 AM — 2:00 PM`. Both render on the same page.
 
-- [ ] Group `LOCATIONS` by identical `hours` and render the footer from that grouping.
-- [ ] Keep the "Mon — Fri" collapsing, but derive it — do not hardcode the ranges again.
-- [ ] Verify by changing one day's hours in `src/lib/locations.ts` and confirming the footer follows.
+- [x] ~~Group `LOCATIONS` by identical `hours` and render the footer from that grouping.~~
+- [x] ~~Keep the "Mon — Fri" collapsing, but derive it — do not hardcode the ranges again.~~
+- [x] ~~Verify by changing one day's hours and confirming the footer follows.~~
+
+**Done 2026-09-17 (session 6).** `weeklyHours()` in `src/lib/locations.ts` groups the stops by
+identical `hours` in day order, names each group the way a sign would (one day in full, a run of
+three or more as `Mon — Fri`, anything else listed), and compacts `7:00 AM — 3:00 PM` to `7am — 3pm`
+— keeping half-hours (`8:30am`) and passing unparseable strings through untouched. `page.tsx`
+renders that list; nothing in the footer restates an hour.
+
+The real data has no weekday run, so the footer now reads five honest rows instead of three wrong
+ones:
+
+```
+Mon, Fri   7am — 2pm      Wednesday  7am — 3pm      Sunday  8am — 12pm
+Tue, Sat   7am — 1pm      Thursday   8am — 2pm
+```
+
+Drift test, run against `next dev`: setting Tue/Wed/Thu to `7:00 AM — 2:00 PM` collapsed the footer
+to `Mon — Fri 7am — 2pm`, and `8:30 AM` on Sunday rendered as `8:30am — 12pm`. Reverted after.
 
 ### 7.1 The map has no WebGL fallback (P1)
 

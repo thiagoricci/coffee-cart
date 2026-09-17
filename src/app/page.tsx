@@ -2,6 +2,7 @@ import CoffeeScroll from "@/components/CoffeeScroll";
 import CartShowcase from "@/components/CartShowcase";
 import WeeklyLocations from "@/components/WeeklyLocations";
 import CoffeeMenu from "@/components/CoffeeMenu";
+import { weeklyHours } from "@/lib/locations";
 
 export default function Home() {
   return (
@@ -41,15 +42,11 @@ export default function Home() {
                 This Week&apos;s Hours
               </h4>
               <div className="space-y-2">
-                <p className="font-body text-sm text-cream/40">
-                  Mon — Fri <span className="text-cream/60">7am — 2pm</span>
-                </p>
-                <p className="font-body text-sm text-cream/40">
-                  Saturday <span className="text-cream/60">7am — 1pm</span>
-                </p>
-                <p className="font-body text-sm text-cream/40">
-                  Sunday <span className="text-cream/60">8am — 12pm</span>
-                </p>
+                {weeklyHours().map(({ days, hours }) => (
+                  <p key={days} className="font-body text-sm text-cream/40">
+                    {days} <span className="text-cream/60">{hours}</span>
+                  </p>
+                ))}
               </div>
             </div>
             <div>

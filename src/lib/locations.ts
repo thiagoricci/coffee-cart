@@ -154,3 +154,77 @@ export function directionsUrl(stop: Stop, origin?: Coords | null): string {
   if (origin) params.set("origin", `${origin.lat},${origin.lng}`);
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
+
+/** One footer row: the days that share a schedule, and that schedule. */
+export interface HoursRow {
+  days: string;
+  hours: string;
+}
+
+const DASH = "—";
+
+/** "7:00 AM" → "7am"; "7:30 AM" → "7:30am". Unparseable input passes through. */
+function compactTime(time: string): string {
+  const match = /^(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?$/i.exec(time.trim());
+  if (!match) return time.trim();
+  const [, hour, minutes, meridiem] = match;
+  const suffix = `${meridiem.toLowerCase()}m`;
+  return minutes && minutes !== "00" ? `${hour}:${minutes}${suffix}` : `${hour}${suffix}`;
+}
+
+/** "7:00 AM — 3:00 PM" → "7am — 3pm", the footer's tighter register. */
+export function compactHours(hours: string): string {
+  const parts = hours.split(DASH).map((part) => part.trim());
+  if (parts.length !== 2) return hours.trim();
+  return `${compactTime(parts[0])} ${DASH} ${compactTime(parts[1])}`;
+}
+
+/**
+ * Days that share hours, written the way a sign would write them: a single day
+ * in full, a run of three or more collapsed to "Mon — Fri", anything else
+ * listed. `indices` are positions in the week, so runs are found by adjacency.
+ */
+function formatDays(stops: Stop[], indices: number[]): string {
+  if (indices.length === 1) return stops[indices[0]].day;
+
+  const abbrev = (i: number) => stops[i].day.slice(0, 3);
+  const segments: string[] = [];
+  let run = [indices[0]];
+
+  const flush = () => {
+    if (run.length >= 3) {
+      segments.push(`${abbrev(run[0])} ${DASH} ${abbrev(run[run.length - 1])}`);
+    } else {
+      segments.push(...run.map(abbrev));
+    }
+  };
+
+  for (const i of indices.slice(1)) {
+    if (i === run[run.length - 1] + 1) run.push(i);
+    else {
+      flush();
+      run = [i];
+    }
+  }
+  flush();
+
+  return segments.join(", ");
+}
+
+/**
+ * The week's hours grouped by identical schedules, in day order. The footer
+ * renders this rather than restating the hours, so the two cannot drift.
+ */
+export function weeklyHours(stops: Stop[] = LOCATIONS): HoursRow[] {
+  const groups = new Map<string, number[]>();
+  stops.forEach((stop, i) => {
+    const existing = groups.get(stop.hours);
+    if (existing) existing.push(i);
+    else groups.set(stop.hours, [i]);
+  });
+
+  return Array.from(groups, ([hours, indices]) => ({
+    days: formatDays(stops, indices),
+    hours: compactHours(hours),
+  }));
+}
