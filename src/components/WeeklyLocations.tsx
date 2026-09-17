@@ -1,59 +1,20 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-const LOCATIONS = [
-  {
-    day: "Monday",
-    location: "Downtown Business District",
-    address: "Corner of Main & 3rd St",
-    hours: "7:00 AM — 2:00 PM",
-    vibe: "Quick picks for the morning rush",
-  },
-  {
-    day: "Tuesday",
-    location: "Riverside Park",
-    address: "North Entrance, by the Fountain",
-    hours: "7:00 AM — 1:00 PM",
-    vibe: "Grab a cup and walk the trail",
-  },
-  {
-    day: "Wednesday",
-    location: "University Campus",
-    address: "Central Quad, near Library",
-    hours: "7:00 AM — 3:00 PM",
-    vibe: "Study fuel for the ambitious",
-  },
-  {
-    day: "Thursday",
-    location: "Arts District",
-    address: "Gallery Row, 5th & Elm",
-    hours: "8:00 AM — 2:00 PM",
-    vibe: "Where creativity meets caffeine",
-  },
-  {
-    day: "Friday",
-    location: "Harbor Square",
-    address: "Waterfront Promenade",
-    hours: "7:00 AM — 2:00 PM",
-    vibe: "Fresh breeze, fresh brew",
-  },
-  {
-    day: "Saturday",
-    location: "Farmers Market",
-    address: "Oak Street Market Grounds",
-    hours: "7:00 AM — 1:00 PM",
-    vibe: "Our original spot — community staple",
-  },
-  {
-    day: "Sunday",
-    location: "Beachfront Promenade",
-    address: "Lifeguard Tower 5",
-    hours: "8:00 AM — 12:00 PM",
-    vibe: "Slow mornings, warm cups",
-  },
-];
+import { useCanHover } from "@/lib/useCanHover";
+
+import {
+  type Coords,
+  LOCATIONS,
+  directionsUrl,
+  distanceMiles,
+  formatMiles,
+  mapEmbedUrl,
+  mapViewUrl,
+  nearestStopIndex,
+} from "@/lib/locations";
 
 /** Monday-first index (0 = Monday … 6 = Sunday) for a given date. */
 function getDayIndex(now: Date): number {
@@ -115,6 +76,34 @@ export default function WeeklyLocations() {
   const [activeDay, setActiveDay] = useState(0);
   const hasPicked = useRef(false);
 
+  // Location is requested on a button press only — never on load or on scroll.
+  const [userPos, setUserPos] = useState<Coords | null>(null);
+  const [geoStatus, setGeoStatus] = useState<
+    "idle" | "locating" | "denied" | "unsupported" | "failed"
+  >("idle");
+
+  // On a touch screen the embedded map swallows vertical drags, so the page
+  // stops scrolling whenever a thumb lands on it. Shield it until it is asked
+  // for; pointer devices scroll with the wheel and never need this.
+  const canHover = useCanHover();
+  const [mapActive, setMapActive] = useState(false);
+
+  const locateMe = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoStatus("unsupported");
+      return;
+    }
+    setGeoStatus("locating");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoStatus("idle");
+      },
+      (err) => setGeoStatus(err.code === err.PERMISSION_DENIED ? "denied" : "failed"),
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 }
+    );
+  }, []);
+
   useEffect(() => {
     const now = new Date();
     setTodayIndex(getDayIndex(now));
@@ -127,10 +116,12 @@ export default function WeeklyLocations() {
   const selectDay = (i: number) => {
     hasPicked.current = true;
     setActiveDay(i);
+    setMapActive(false);
   };
 
   const current = LOCATIONS[activeDay];
   const currentStatus = getLocationStatus(activeDay, todayIndex);
+  const nearest = userPos ? nearestStopIndex(userPos) : null;
 
   return (
     <section id="find-us-today" ref={ref} className="relative py-24 md:py-32 bg-foam overflow-hidden">
@@ -243,6 +234,12 @@ export default function WeeklyLocations() {
                     <p className="font-body text-base text-espresso/80">
                       {current.address}
                     </p>
+                    <p className="font-body text-sm text-walnut/50 mt-0.5">{current.city}</p>
+                    {userPos && (
+                      <p className="font-body text-xs uppercase tracking-[0.15em] text-amber mt-2">
+                        {formatMiles(distanceMiles(userPos, current))} away
+                      </p>
+                    )}
                   </div>
                   <div>
                     <p className="font-body text-xs uppercase tracking-[0.2em] text-walnut/40 mb-2">
@@ -254,15 +251,48 @@ export default function WeeklyLocations() {
                   </div>
                 </div>
 
+                <div className="mt-8">
+                  <div className="relative rounded-xl overflow-hidden border border-latte/30 bg-latte/10">
+                    {/* Keyed on the stop so switching days reloads the embed. */}
+                    <iframe
+                      key={`${current.lat},${current.lng}`}
+                      title={`Map showing ${current.location}, ${current.city}`}
+                      src={mapEmbedUrl(current)}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      className="block w-full h-[220px] md:h-[280px]"
+                    />
+                    {!canHover && !mapActive && (
+                      <button
+                        type="button"
+                        onClick={() => setMapActive(true)}
+                        className="absolute inset-0 flex items-start justify-center pt-4 bg-espresso/5"
+                      >
+                        <span className="font-body text-[11px] uppercase tracking-[0.15em] text-espresso/70 bg-cream/95 px-4 py-2 rounded-full shadow-sm">
+                          Tap to move the map
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                  <a
+                    href={mapViewUrl(current)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center min-h-[44px] mt-1 font-body text-xs text-walnut/45 hover:text-amber transition-colors duration-300"
+                  >
+                    Open in a larger map &#8599;
+                  </a>
+                </div>
+
                 <div className="mt-8 pt-8 border-t border-latte/20">
                   <p className="font-body text-sm text-walnut/50 italic">
                     &ldquo;{current.vibe}&rdquo;
                   </p>
                 </div>
 
-                <div className="mt-8 flex flex-wrap gap-3">
+                <div className="mt-8 flex flex-wrap items-center gap-3">
                   <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current.address)}`}
+                    href={directionsUrl(current, userPos)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-espresso text-cream font-body text-sm uppercase tracking-[0.15em] rounded-full hover:bg-walnut transition-colors duration-300"
@@ -273,7 +303,53 @@ export default function WeeklyLocations() {
                     </svg>
                     Get Directions
                   </a>
+
+                  <button
+                    type="button"
+                    onClick={locateMe}
+                    disabled={geoStatus === "locating"}
+                    className="inline-flex items-center gap-2 px-6 py-3 border border-espresso/15 text-espresso/70 font-body text-sm uppercase tracking-[0.15em] rounded-full hover:border-espresso/40 hover:text-espresso transition-colors duration-300 disabled:opacity-50"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="7" />
+                      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                    </svg>
+                    {geoStatus === "locating"
+                      ? "Locating…"
+                      : userPos
+                        ? "Update my location"
+                        : "How far am I?"}
+                  </button>
                 </div>
+
+                {userPos && nearest !== null && nearest !== activeDay && (
+                  <button
+                    type="button"
+                    onClick={() => selectDay(nearest)}
+                    className="mt-4 inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-left font-body text-sm text-walnut/60 hover:text-espresso transition-colors duration-300"
+                  >
+                    <span className="text-amber uppercase tracking-[0.15em] text-xs">
+                      Closest to you
+                    </span>
+                    <span>
+                      {LOCATIONS[nearest].day} — {LOCATIONS[nearest].location},{" "}
+                      {LOCATIONS[nearest].city}
+                    </span>
+                    <span className="text-walnut/40">
+                      ({formatMiles(distanceMiles(userPos, LOCATIONS[nearest]))})
+                    </span>
+                  </button>
+                )}
+
+                {geoStatus !== "idle" && geoStatus !== "locating" && (
+                  <p className="mt-4 font-body text-xs text-walnut/45 max-w-md leading-relaxed">
+                    {geoStatus === "denied"
+                      ? "No problem — location stayed off. Get Directions still routes from where you are once Google Maps opens."
+                      : geoStatus === "unsupported"
+                        ? "This browser doesn't offer location. Get Directions still works."
+                        : "Couldn't get a fix on your location. Get Directions still works."}
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>
