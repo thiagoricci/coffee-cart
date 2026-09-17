@@ -13,7 +13,7 @@ anything earlier except where noted.
 
 ## START HERE — session handoff
 
-**Last updated:** 2026-09-17, end of session 4.
+**Last updated:** 2026-09-17, end of session 5.
 
 ### Where things stand
 
@@ -27,6 +27,9 @@ anything earlier except where noted.
 | 2.2 | Frozen tail after the last frame **3.58 → 0.78 screens**, pacing untouched |
 | 3.1 | Hero text legibility; worst line 1.64:1 → readable, frames left undarkened |
 | 5.1 / 5.2 | Dates derived from the current week; clock read client-side only, SSR now clock-free |
+| Signature Serves (s5) | Hover/tap expansion with per-drink build diagrams; **closes 6.5 and 6.7** |
+| Find Us Today (s5) | Real Turlock-area coordinates, keyless OSM map, opt-in geolocation + distance |
+| Mobile (s5) | Tap-to-close bug fixed, map scroll-trap shielded, own tap targets ≥ 44 px |
 
 **Closed by human decision — do not reopen without new information:**
 
@@ -81,22 +84,39 @@ something secret.
 
 ### Do this next
 
-**Nothing is queued.** Everything through session 4 is committed and pushed, and the demo-site
-decision (above) closed the rest of the P0/P1 backlog.
+**Phase 7 is queued** — five items, ordered, opened 2026-09-17 at the human's request after
+reviewing session 5's work. Read *Phase 7* below for the detail; the order is:
 
-What survives the demo framing, if anyone picks this up again — all of it optional polish, none of it
-requested:
+1. **5.4** — footer hours contradict `LOCATIONS`. The only factual error a visitor can see, and its
+   stated prerequisite (`src/lib/locations.ts`) now exists. Start here.
+2. **7.1** — the OSM map has no WebGL fallback; without WebGL the card shows OSM's own blue error.
+3. **7.2** — the invariants added in session 5 are untested and `tests/` is still empty.
+4. **6.1** — marquee seam, at the top of the section session 5 just polished.
+5. **5.7** — favicon and OG tags, so the demo link doesn't preview blank.
 
-- **5.4 / 5.6 / 5.7** — footer hours drifting from `LOCATIONS`, no server-rendered `<h1>`, thin
-  metadata (no favicon, no OG image). *Unconfirmed:* these were not explicitly named when Phase 4/5
-  was closed. 5.7 is the only one with a real demo argument — a portfolio link shared in chat or on
-  social renders a blank preview card without OG tags. Ask before doing any of them.
-- **Phase 6** — cosmetic refinements: seamless marquee loop (6.1), `sizes` on `<Image fill>` (6.2),
-  JS-independent section reveals (6.3), grain overlay (6.4), menu row type hierarchy (6.5),
-  `SectionHeading` extraction (6.6), explicit menu `category` field (6.7), `.gitignore` tidy (6.8).
+Session 5 changes are **uncommitted** — `CoffeeMenu.tsx`, `WeeklyLocations.tsx` and a new `src/lib/`
+are in the working tree. Commit them before starting Phase 7 so its diffs stay separate.
 
-**Still owed from session 4:** nobody has looked at the Find Us Today card in a browser since the
-date fix. Expect *Thursday — Sep 17* with Arts District selected.
+**Do not re-pitch** the items closed by the demo-site decision above. Phase 7 deliberately contains
+nothing from that list: 5.7 is queued on *demo-sharing* grounds (a link that previews blank
+undercuts the demo), explicitly **not** on SEO grounds.
+
+**Settled in session 5 — do not reopen:**
+
+- **The map is the keyless OpenStreetMap `<iframe>`, by choice.** Four options were put to the human
+  (OSM iframe, Leaflet, Google Maps Embed, static image); they chose the no-key path and accepted
+  the generic styling as the cost. Do not propose Google Maps, Mapbox, or anything needing an API
+  key. If the map must ever match the palette, Leaflet with a CSS-filtered tile layer is the next
+  step that stays keyless.
+- **Stops are pinned around Turlock, CA** (plus Modesto, Ceres, Livingston, Hilmar) — the human's own
+  choice of locale. Coordinates were resolved against OSM's geocoder, not typed from memory.
+- **Two menu cards can be open at once on desktop** (one pinned, one hovered). Judged a feature for
+  comparing builds, not a defect.
+
+**Cleared from session 4:** the Find Us Today card *has* now been opened in a browser (session 5) and
+verified at desktop and 390 px. Note its content changed — expect *Thursday — Sep 17* with
+**Downtown Turlock** selected, not "Arts District"; the placeholder stops were replaced with real
+Central Valley locations.
 
 **Two environment traps that cost real time in session 3:**
 
@@ -124,7 +144,7 @@ date fix. Expect *Thursday — Sep 17* with Arts District selected.
 
 ```sh
 npx tsc --noEmit        # expect: clean
-npx next build          # expect: success, route / at ~51.4 kB
+npx next build          # expect: success, route / at ~57 kB (was 51.4 kB before session 5)
 # ⚠️ If `next dev` is running, `next build` overwrites its .next and breaks the dev server
 # mid-session (this happened on 2026-09-16). Build in a copy instead: cp src public + configs to
 # a temp dir, symlink node_modules, build there.
@@ -133,7 +153,11 @@ du -sh public/coffee-frames                # expect: 2.3M
 ls public/coffee-frames-portrait | wc -l   # expect: 40
 du -sh public/coffee-frames-portrait       # expect: 1.7M
 
-git status -sb                             # expect: ## main...origin/main, nothing else
+ls src/lib                                 # expect: locations.ts, useCanHover.ts (session 5)
+ls tests                                   # expect: empty until 7.2 lands
+
+git status -sb   # expect (until session 5 is committed): modified CoffeeMenu.tsx,
+                 # WeeklyLocations.tsx, plan.md + untracked src/lib/. Clean after that.
 du -sh .git                                # expect: ~4.6M (PNGs purged 2026-09-17)
 git rev-list --objects --all | grep -c ezgif   # expect: 0
 ```
@@ -165,18 +189,20 @@ git rev-list --objects --all | grep -c ezgif   # expect: 0
 | 5.1 | ~~Derive location dates from current week~~ **DONE** | P0 | S | `WeeklyLocations.tsx` |
 | 5.2 | ~~Fix SSR/client hydration mismatch on "today"~~ **DONE** | P0 | S | `WeeklyLocations.tsx` |
 | 5.3 | ~~"Open Now" must respect hours~~ **CLOSED** — demo site | — | S | `WeeklyLocations.tsx` |
-| 5.4 | Derive footer hours from `LOCATIONS` | P1 | S | `page.tsx`, new `src/lib/locations.ts` |
+| 5.4 | Derive footer hours from `LOCATIONS` — **QUEUED 1st**, unblocked: `src/lib/locations.ts` now exists | P1 | S | `page.tsx`, `src/lib/locations.ts` |
 | 5.5 | ~~Add real business info + JSON-LD~~ **CLOSED** — demo site, no real business | — | M | `layout.tsx`, `page.tsx` |
 | 5.6 | Server-rendered `<h1>` | P1 | S | `CoffeeScroll.tsx` |
-| 5.7 | Site metadata (favicon, OG, theme-color) | P1 | S | `layout.tsx`, `src/app/` |
-| 6.1 | Seamless marquee loop | P2 | S | `CoffeeMenu.tsx` |
+| 5.7 | Site metadata (favicon, OG, theme-color) — **QUEUED 5th** | P2 | S | `layout.tsx`, `src/app/` |
+| 6.1 | Seamless marquee loop — **QUEUED 4th** | P2 | S | `CoffeeMenu.tsx` |
 | 6.2 | `sizes` on `<Image fill>` | P2 | XS | `CartShowcase.tsx` |
 | 6.3 | JS-independent section reveals | P2 | S | `CartShowcase.tsx`, `WeeklyLocations.tsx` |
 | 6.4 | Reconsider the grain overlay | P2 | XS | `globals.css` |
-| 6.5 | Menu row type hierarchy | P2 | XS | `CoffeeMenu.tsx` |
+| 6.5 | ~~Menu row type hierarchy~~ **DONE** 2026-09-17 — name now outranks price | P2 | XS | `CoffeeMenu.tsx` |
 | 6.6 | Extract `SectionHeading` | P2 | S | new component, 4 call sites |
-| 6.7 | Explicit `category` field on menu items | P2 | XS | `CoffeeMenu.tsx` |
+| 6.7 | ~~Explicit `category` field on menu items~~ **DONE** 2026-09-17 | P2 | XS | `CoffeeMenu.tsx` |
 | 6.8 | Repo hygiene | P2 | XS | `.gitignore` |
+| 7.1 | Map has no WebGL fallback — **QUEUED 2nd** | P1 | S | `WeeklyLocations.tsx` |
+| 7.2 | Session-5 invariants untested, `tests/` empty — **QUEUED 3rd** | P1 | M | `tests/`, `package.json` |
 
 ~~**If only three things ship: 1.1, 2.1 + 2.3, and 3.2.**~~ — obsolete. 1.1 shipped, 2.1 was
 superseded by 2.2, and 2.3 and 3.2 were both closed by human decision. Nothing is queued; see
@@ -936,12 +962,16 @@ At 3am on a Wednesday the card still says "Open Now" with a pulsing green dot
 - [ ] Rename the past-day label — Monday is not "Closed", it has already happened. "Past" or a
       neutral dot reads better.
 
-### 5.4 Footer hours contradict the locations data (P1)
+### 5.4 Footer hours contradict the locations data (P1) — UNBLOCKED, queued 1st
 
-Footer says Mon–Fri 7am–2pm (`page.tsx:44`), but Wednesday is 7–3 and Thursday is 8–2.
+Footer says Mon–Fri 7am–2pm (`page.tsx:44`), but Wednesday is 7–3 and Thursday is 8–2. Still true as
+of 2026-09-17; session 5 changed the stops but kept every day's hours, so the contradiction is
+unchanged rather than newly introduced.
 
-- [ ] Move `LOCATIONS` into `src/lib/locations.ts` (the directory exists and is empty).
-- [ ] Derive the footer hours from it so the two cannot drift.
+- [x] ~~Move `LOCATIONS` into `src/lib/locations.ts` (the directory exists and is empty).~~ **DONE**
+      2026-09-17 (session 5) — the file now also holds the `Stop` type and the geo helpers.
+- [ ] Derive the footer hours from it so the two cannot drift. **This is the whole remaining task**;
+      see *Phase 7 / 7.0*.
 
 ### 5.5 No real business information — CLOSED (demo site)
 
@@ -1011,12 +1041,12 @@ underneath it.
 - [ ] Either raise the opacity to where it is actually visible, or remove it. Lower the `z-index`
       below any future overlay layer regardless.
 
-### 6.5 Inverted type hierarchy in menu rows
+### 6.5 Inverted type hierarchy in menu rows — DONE (2026-09-17)
 
-Price is `text-2xl` while the drink name is `text-xl` (`CoffeeMenu.tsx:167` and `:194`). The price wins
-the row.
+Price was `text-2xl` while the drink name was `text-xl`, so the price won the row.
 
-- [ ] Swap the emphasis.
+- [x] ~~Swap the emphasis.~~ **DONE** in session 5's Signature Serves rework: the name is now
+      `text-2xl` and the price `text-xl`. Folded in because the rework rewrote those exact lines.
 
 ### 6.6 Four copies of the same section header
 
@@ -1026,17 +1056,91 @@ The eyebrow + `h2` + paragraph pattern is repeated in `CartShowcase.tsx:24-38`,
 - [ ] Extract a `SectionHeading` component. This is also where the amber fix from 3.2 gets applied
       once instead of four times.
 
-### 6.7 Brittle category derivation
+### 6.7 Brittle category derivation — DONE (2026-09-17)
 
-`getCategory` string-matches on `"Iced"` / `"Cold Brew"` (`CoffeeMenu.tsx:70-74`).
+`getCategory` string-matched on `"Iced"` / `"Cold Brew"`.
 
-- [ ] Put an explicit `category` field on each `MenuItem`.
+- [x] ~~Put an explicit `category` field on each `MenuItem`.~~ **DONE** in session 5. `getCategory`
+      is gone; `MenuItem.category` is a typed `"Hot" | "Iced" | "Specialty"`. Filters verified in a
+      browser: Hot 7, Iced 2, Specialty 1, All 10.
 
 ### 6.8 Repo hygiene
 
 - [ ] `.DS_Store` and `tsconfig.tsbuildinfo` are in the working tree. Add to `.gitignore` and
       `git rm --cached`.
 - [ ] `tests/` and `src/lib/` exist but are empty — populate (5.4 uses `src/lib/`) or remove.
+
+---
+
+## Phase 7 — Next implementation queue (opened 2026-09-17)
+
+Queued at the human's request at the end of session 5, after the Signature Serves rework and the
+Find Us Today map landed and were reviewed. Ordered by value-to-effort. Two entries are existing
+items promoted into this queue rather than renumbered — follow their own sections for detail.
+
+| Order | Item | Status | Priority | Effort | Files |
+|---|---|---|---|---|---|
+| 1 | **5.4** Footer hours contradict `LOCATIONS` | unblocked 2026-09-17 | P1 | S | `page.tsx`, `src/lib/locations.ts` |
+| 2 | **7.1** Map has no WebGL fallback | new 2026-09-17 | P1 | S | `WeeklyLocations.tsx` |
+| 3 | **7.2** Session-5 invariants are untested | new 2026-09-17 | P1 | M | `tests/`, `package.json` |
+| 4 | **6.1** Seamless marquee loop | existing | P2 | S | `CoffeeMenu.tsx` |
+| 5 | **5.7** Favicon and link metadata | existing, re-framed | P2 | S | `layout.tsx`, `src/app/` |
+
+### 7.0 Start with 5.4 — its blocker is gone
+
+Not a new item; recorded here because the reason it was parked no longer holds. 5.4's row named
+"new `src/lib/locations.ts`" as a prerequisite, and **that file now exists** — created in session 5
+to hold the stop coordinates and geo helpers. It exports `LOCATIONS` with a typed `hours` field.
+
+The contradiction is live and visible: the footer claims `Mon — Fri 7am — 2pm`, while the data says
+Wednesday is `7:00 AM — 3:00 PM` and Thursday is `8:00 AM — 2:00 PM`. Both render on the same page.
+
+- [ ] Group `LOCATIONS` by identical `hours` and render the footer from that grouping.
+- [ ] Keep the "Mon — Fri" collapsing, but derive it — do not hardcode the ranges again.
+- [ ] Verify by changing one day's hours in `src/lib/locations.ts` and confirming the footer follows.
+
+### 7.1 The map has no WebGL fallback (P1)
+
+`WeeklyLocations.tsx` embeds `openstreetmap.org/export/embed.html`. That embed now **requires
+WebGL**: where WebGL is unavailable it renders its own blue panel reading *"your browser does not
+support WebGL"* inside the otherwise-styled cream card. Observed directly in session 5 — headless
+Chrome with `--disable-gpu` reproduces it exactly, which is also the easiest way to test the fix.
+
+Rare on real devices, but it is a hole in a section that is otherwise defensive (the geolocation
+path degrades cleanly on deny, unsupported and timeout; this one does not degrade at all).
+
+- [ ] Probe once on mount: `!!document.createElement("canvas").getContext("webgl")`.
+- [ ] When absent, render a styled placeholder instead of the `<iframe>` — keep the address, the
+      `mapViewUrl()` link and the tap target; drop only the embed.
+- [ ] Test with `--disable-gpu` (fallback shows) and `--use-angle=swiftshader
+      --enable-unsafe-swiftshader` (real map shows).
+
+### 7.2 Session-5 invariants are untested (P1)
+
+`tests/` exists and is **empty**; `package.json` has no test script. Session 5 added data with rules
+that break silently rather than loudly:
+
+- every drink's `build[].percent` must sum to **100** (`CoffeeMenu.tsx`) — the drink diagrams divide
+  the vessel by these, so a bad sum renders a subtly wrong picture with no error;
+- every `Stop` needs coordinates, and they should sit inside a Central Valley bounding box — a typo'd
+  sign or digit silently moves the cart to another continent;
+- `distanceMiles` / `nearestStopIndex` (`src/lib/locations.ts`) are pure and trivially testable.
+
+The percentage invariant was checked in session 5 with a throwaway script. That check should be
+permanent rather than re-derived by hand each session.
+
+- [ ] Add a runner (`node --test` needs no new dependency and suits pure functions).
+- [ ] Cover: pour sums, coordinate bounds, a known distance (Turlock → Modesto ≈ 13 mi), and
+      `nearestStopIndex` from a fixed point.
+- [ ] Wire `npm test` and note it in *Verify the state you inherited*.
+
+### Acceptance criteria — Phase 7
+
+- Footer hours and location hours agree by construction; changing one moves the other.
+- The Find Us card degrades to a usable placeholder without WebGL, with directions still reachable.
+- `npm test` runs green and fails loudly if a pour sum or a coordinate is edited wrongly.
+- The marquee loops with no visible seam at desktop width.
+- The site has a favicon and a non-blank link preview.
 
 ---
 
