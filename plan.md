@@ -56,13 +56,22 @@ anything earlier except where noted.
 
 ### Git state — read this before doing anything
 
-`main` is clean and **in sync with `origin/main`** — session 6 was pushed on 2026-09-17 at the
-human's go-ahead, ten commits in one push (`acd7659..6415a43`), no force, no history rewrite.
+`main` is clean and **in sync with `origin/main` at `25b5a62`** (verified with `git fetch`, not just
+local state). Session 6 was pushed on 2026-09-17 at the human's go-ahead, in two pushes — ten
+commits (`acd7659..6415a43`), then three more once the reported mobile bug was fixed
+(`6415a43..25b5a62`). Fast-forward both times: no force, no history rewrite.
 
-Session 6 (2026-09-17), newest first — the whole of Phase 7, plus session 5's work which arrived
-uncommitted and was committed first so the Phase 7 diffs stood on their own:
+Session 6 (2026-09-17), newest first — the whole of Phase 7, then the Phase 8 bug the human reported
+from a phone, plus session 5's work which arrived uncommitted and was committed first so the Phase 7
+diffs stood on their own:
 
 ```
+25b5a62 docs(plan): record the scroll-restoration bug as Phase 8.1
+80ffbfb fix(hero): always open at the top of the page                8.1
+5a4f374 docs(plan): record the push
+6415a43 docs(plan): spell out the build-in-a-copy recipe
+6c0523a docs(plan): correct the unpushed commit count
+9538c53 docs(plan): close Phase 7 and refresh the handoff for session 7
 77499b1 feat(meta): add the favicon and a real link preview          5.7
 5a9fd45 fix(menu): loop the marquee without a seam                   6.1
 facb58a test: cover the pour sums, stop coordinates and hour helpers 7.2
@@ -119,7 +128,18 @@ in this file closed with the evidence:
 | 6.1 | `5a9fd45` | Four copies on a `w-max` track at `-50%`; 0 px error at three widths |
 | 5.7 | `77499b1` | Metadata + four generated PNGs; sources in `tools/brand/` |
 
-Every Phase 7 acceptance criterion is met — see *Acceptance criteria — Phase 7*.
+Every Phase 7 acceptance criterion is met — see *Acceptance criteria — Phase 7*. Everything is
+committed **and pushed**; the working tree is clean and `npm test`, `npx tsc --noEmit` and
+`npx next lint` were all green at the end of session 6.
+
+**Two things left dangling, both the human's call:**
+
+- **`metadataBase` falls back to `http://localhost:3000`** because the site has no domain. Set
+  `NEXT_PUBLIC_SITE_URL`, or deploy to Vercel (which supplies the host), and every absolute URL in
+  the link preview follows. Until then the OG tags point at localhost. See 5.7.
+- **A `next dev` was left running on :3000**, started during session 6 after the inherited one was
+  found serving 404 chunks. Log: `/tmp/claude-501/nextdev.log`. Kill it or reuse it, but check the
+  port before measuring anything — see [[next-build-breaks-running-dev]] in memory.
 
 **Before picking anything up, ask.** What is still open in this file is *not* agreed work:
 
