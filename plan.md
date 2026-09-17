@@ -91,7 +91,8 @@ reviewing session 5's work. Read *Phase 7* below for the detail; the order is:
    now renders `weeklyHours()`; see 7.0.
 2. ~~**7.1** — the OSM map has no WebGL fallback.~~ **DONE** 2026-09-17 (session 6) — `useHasWebGL()`
    swaps in a styled placeholder. **Start at 7.2.**
-3. **7.2** — the invariants added in session 5 are untested and `tests/` is still empty.
+3. ~~**7.2** — the session-5 invariants are untested.~~ **DONE** 2026-09-17 (session 6) —
+   `npm test` runs 14 `node --test` checks. **Start at 6.1.**
 4. **6.1** — marquee seam, at the top of the section session 5 just polished.
 5. **5.7** — favicon and OG tags, so the demo link doesn't preview blank.
 
@@ -145,6 +146,7 @@ Central Valley locations.
 
 ```sh
 npx tsc --noEmit        # expect: clean
+npm test                # expect: 14 tests pass (node --test, added 7.2)
 npx next build          # expect: success, route / at ~57 kB (was 51.4 kB before session 5)
 # ⚠️ If `next dev` is running, `next build` overwrites its .next and breaks the dev server
 # mid-session (this happened on 2026-09-16). Build in a copy instead: cp src public + configs to
@@ -154,11 +156,10 @@ du -sh public/coffee-frames                # expect: 2.3M
 ls public/coffee-frames-portrait | wc -l   # expect: 40
 du -sh public/coffee-frames-portrait       # expect: 1.7M
 
-ls src/lib                                 # expect: locations.ts, useCanHover.ts (session 5)
-ls tests                                   # expect: empty until 7.2 lands
+ls src/lib                 # expect: drinks.ts, locations.ts, useCanHover.ts, useHasWebGL.ts
+ls tests                   # expect: drinks.test.ts, locations.test.ts (session 6)
 
-git status -sb   # expect (until session 5 is committed): modified CoffeeMenu.tsx,
-                 # WeeklyLocations.tsx, plan.md + untracked src/lib/. Clean after that.
+git status -sb                             # expect: clean (session 5 committed in session 6)
 du -sh .git                                # expect: ~4.6M (PNGs purged 2026-09-17)
 git rev-list --objects --all | grep -c ezgif   # expect: 0
 ```
@@ -1083,7 +1084,7 @@ items promoted into this queue rather than renumbered — follow their own secti
 |---|---|---|---|---|---|
 | 1 | ~~**5.4** Footer hours contradict `LOCATIONS`~~ | **done** 2026-09-17 | P1 | S | `page.tsx`, `src/lib/locations.ts` |
 | 2 | ~~**7.1** Map has no WebGL fallback~~ | **done** 2026-09-17 | P1 | S | `WeeklyLocations.tsx` |
-| 3 | **7.2** Session-5 invariants are untested | new 2026-09-17 | P1 | M | `tests/`, `package.json` |
+| 3 | ~~**7.2** Session-5 invariants are untested~~ | **done** 2026-09-17 | P1 | M | `tests/`, `package.json` |
 | 4 | **6.1** Seamless marquee loop | existing | P2 | S | `CoffeeMenu.tsx` |
 | 5 | **5.7** Favicon and link metadata | existing, re-framed | P2 | S | `layout.tsx`, `src/app/` |
 
@@ -1149,7 +1150,7 @@ Verified over CDP against `next dev` (headless Chrome 131, `~/.cache/puppeteer`)
 > Gotcha: `--dump-dom` is useless for this — it captures before hydration, so the probe still reads
 > `null`. Drive the page over the DevTools protocol and evaluate after a few seconds instead.
 
-### 7.2 Session-5 invariants are untested (P1)
+### 7.2 Session-5 invariants are untested (P1) — DONE (2026-09-17)
 
 `tests/` exists and is **empty**; `package.json` has no test script. Session 5 added data with rules
 that break silently rather than loudly:
@@ -1163,10 +1164,31 @@ that break silently rather than loudly:
 The percentage invariant was checked in session 5 with a throwaway script. That check should be
 permanent rather than re-derived by hand each session.
 
-- [ ] Add a runner (`node --test` needs no new dependency and suits pure functions).
-- [ ] Cover: pour sums, coordinate bounds, a known distance (Turlock → Modesto ≈ 13 mi), and
-      `nearestStopIndex` from a fixed point.
-- [ ] Wire `npm test` and note it in *Verify the state you inherited*.
+- [x] ~~Add a runner.~~ `node --test`, no new dependency — Node 24 strips the types itself.
+- [x] ~~Cover pour sums, coordinate bounds, a known distance and `nearestStopIndex`.~~
+- [x] ~~Wire `npm test` and note it in *Verify the state you inherited*.~~
+
+**Done 2026-09-17 (session 6).** `npm test` →
+`node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON "tests/*.test.ts"`, 14 tests, ~0.3 s.
+
+The drink data moved out of the component into **`src/lib/drinks.ts`** (types, `POUR`, `MENU_ITEMS`)
+so a test can import it without JSX; `CoffeeMenu.tsx` keeps the vessel geometry and the UI. That is
+the only production change 7.2 made.
+
+- `tests/drinks.test.ts` — every drink has a build; pours sum to 100; each pour is a positive whole
+  number; colours come from the shared `POUR` palette; strength is 1–5 and prices match `$0.00`.
+- `tests/locations.test.ts` — the week is complete and Monday-first; every stop sits in a Central
+  Valley box (37.0–38.0 N, 121.5–120.3 W); hours parse; Turlock → Modesto is 12.8 mi and the
+  distance is symmetric; `nearestStopIndex` returns Tuesday from Ceres and each stop from its own
+  coordinates; `formatMiles`; plus `compactHours` and `weeklyHours` from 5.4, including the
+  "Mon — Wed" run collapsing and the non-adjacent "Mon, Wed" case.
+
+Both invariants were confirmed to fail loudly: a pour changed to 16 gives *"Espresso pours sum to
+101, not 100"*, a flipped longitude sign gives *"Wednesday (Stanislaus State): longitude 120.85578 is
+outside the valley"*. Reverted after.
+
+`tsconfig.json` gained `allowImportingTsExtensions` — Node needs the `.ts` in the import specifier,
+and TypeScript rejects it otherwise. Safe here because the project is `noEmit`.
 
 ### Acceptance criteria — Phase 7
 
