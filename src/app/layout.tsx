@@ -74,10 +74,20 @@ export default function RootLayout({
           were, usually mid Find Us Today. Opting out of restoration has to
           happen while the document parses: an effect runs after the browser has
           already jumped, which shows as a flash of the wrong section.
+
+          Dropping the fragment covers the other way in. `#find-us-today` is the
+          hero CTA's target, so any URL a visitor kept after tapping it — a
+          bookmark, a history suggestion, a shared link — opens straight on Find
+          Us Today with the hero never played. Scroll restoration does not cover
+          this: a fragment navigation is not a restore, so it lands there even
+          with restoration manual. There is no deep link into the page worth
+          keeping — the CTA is the only thing that has ever written this hash.
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `if("scrollRestoration" in history)history.scrollRestoration="manual";`,
+            __html:
+              `if("scrollRestoration" in history)history.scrollRestoration="manual";` +
+              `if(location.hash)history.replaceState(null,"",location.pathname+location.search);`,
           }}
         />
       </head>

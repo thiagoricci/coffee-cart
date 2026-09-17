@@ -212,6 +212,15 @@ const TEXT_SECTIONS: TextSection[] = [
         </h2>
         <motion.a
           href="#find-us-today"
+          onClick={(e) => {
+            // Scroll there without leaving the hash behind. The href stays for
+            // middle-click and copy-link, but a plain tap must not rewrite the
+            // URL: whatever the visitor keeps afterwards — bookmark, history
+            // suggestion, shared link — would then reopen on Find Us Today and
+            // skip the hero. `scroll-behavior: smooth` on html keeps the glide.
+            e.preventDefault();
+            document.getElementById("find-us-today")?.scrollIntoView();
+          }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
           className="mt-8 inline-flex items-center justify-center px-8 py-3 bg-espresso text-cream font-body text-sm uppercase tracking-[0.2em] rounded-full font-bold hover:bg-walnut transition-colors duration-300"
