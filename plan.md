@@ -1,6 +1,7 @@
 # Brew & Go — UI Improvement Plan
 
-Derived from a full review of `src/app/*` and `src/components/*` on 2026-09-16 against commit `e9e9e1e`.
+Derived from a full review of `src/app/*` and `src/components/*` on 2026-09-16 against the commit
+now known as `01e066b` (it was `e9e9e1e` before the 2026-09-17 history rewrite — see *Git state*).
 
 Phases are ordered by impact. Phases 1–3 change how the site actually feels to use; 4–6 are
 correctness and refinement. Each phase is independently shippable — nothing later depends on
@@ -12,7 +13,7 @@ anything earlier except where noted.
 
 ## START HERE — session handoff
 
-**Last updated:** 2026-09-17, session 4.
+**Last updated:** 2026-09-17, end of session 4.
 
 ### Where things stand
 
@@ -46,13 +47,19 @@ anything earlier except where noted.
 
 ### Git state — read this before doing anything
 
-`main` is clean and in sync with `origin/main`. Three commits landed on 2026-09-17:
+`main` is clean and in sync with `origin/main`. Five commits landed on 2026-09-17:
 
 ```
+8313df3 docs(plan): close Phase 4, 3.2, 5.3 and 5.5 — demo site
+0b6bc66 docs(plan): record the commit, push and history purge
 a84c000 docs: add the phased UI improvement plan
 b3fb21f fix(locations): derive week dates from the clock, read client-side only
 d9ca86f perf(hero): serve WebP frame sets, fix CLS, and tighten scroll pacing
 ```
+
+Old SHA → new, for the references still scattered through this file:
+`e9e9e1e`→`01e066b`, `d887736`→`6d63dc9`, `0796d7d`→`d5e08f5`, `8fef015`→`5afaa69`,
+`f81fc73`→`bbdc60a`, `d42599e`→`0a0f0f2`.
 
 **History was rewritten.** The 40 original `public/ezgif-frame-*.png` were purged from every commit
 with `git filter-branch --index-filter`, and `main` was force-pushed. A fresh clone is now 4.5 MB
@@ -125,6 +132,10 @@ ls public/coffee-frames | wc -l            # expect: 40
 du -sh public/coffee-frames                # expect: 2.3M
 ls public/coffee-frames-portrait | wc -l   # expect: 40
 du -sh public/coffee-frames-portrait       # expect: 1.7M
+
+git status -sb                             # expect: ## main...origin/main, nothing else
+du -sh .git                                # expect: ~4.6M (PNGs purged 2026-09-17)
+git rev-list --objects --all | grep -c ezgif   # expect: 0
 ```
 
 ---
@@ -167,14 +178,16 @@ du -sh public/coffee-frames-portrait       # expect: 1.7M
 | 6.7 | Explicit `category` field on menu items | P2 | XS | `CoffeeMenu.tsx` |
 | 6.8 | Repo hygiene | P2 | XS | `.gitignore` |
 
-**If only three things ship: 1.1, 2.1 + 2.3, and 3.2.**
+~~**If only three things ship: 1.1, 2.1 + 2.3, and 3.2.**~~ — obsolete. 1.1 shipped, 2.1 was
+superseded by 2.2, and 2.3 and 3.2 were both closed by human decision. Nothing is queued; see
+*Do this next*.
 
 ---
 
 ## Phase 0 — Prerequisites — COMPLETE
 
 - [x] Baseline payload recorded: **23.8 MB across 40 PNGs, avg 609 KB, 1280×720**.
-- [x] Lighthouse baseline captured — *after the fact*, by reconstructing commit `e9e9e1e` in a git
+- [x] Lighthouse baseline captured — *after the fact*, by reconstructing commit `01e066b` in a git
       worktree and serving a real production build. Method and numbers in *Measurement results*.
 - [ ] Branch never created; work is uncommitted on `main`. Do this before continuing:
       `git checkout -b ui/improvements`
@@ -400,7 +413,7 @@ directly.
 ## Phase 0 / Phase 1 measurement results (2026-09-16)
 
 Lighthouse 13.4.1, mobile preset, simulated throttling, 3 runs each, medians reported.
-Baseline was reconstructed in a git worktree at commit `e9e9e1e` (the 40 PNGs, pre-Phase-1 loader)
+Baseline was reconstructed in a git worktree at commit `01e066b` (the 40 PNGs, pre-Phase-1 loader)
 and served from a real production build, so this is a like-for-like comparison, not an estimate.
 
 | Metric | Before (PNG) | After (WebP) | Delta |
@@ -479,7 +492,7 @@ That is `CartShowcase`. The mechanism:
 3. When `isLoaded` flips, the `h-[500svh]` hero container mounts and shoves every one of those
    sections down by several viewport heights in a single frame.
 
-**This is the root cause of the "scroll jumping" that commits `e9e9e1e`, `d887736` and `0796d7d`
+**This is the root cause of the "scroll jumping" that commits `01e066b`, `6d63dc9` and `d5e08f5`
 were fighting.** The three scroll-reset effects at `CoffeeScroll.tsx:246-288` — manual
 `scrollRestoration`, overflow locking, and a triple-nested `requestAnimationFrame` reset — are all
 treating the symptom. The hero occupying zero height during load is the disease.
@@ -772,7 +785,7 @@ frames in between, and it breaks the moment the animation is re-exported.
       overlays: `bg-gradient-to-b from-espresso/50 via-transparent to-espresso/40`.
 - [ ] Remove the `text-espresso` special-case on section 05 — cream becomes safe everywhere.
 
-### 3.2 Fix the amber accent
+### 3.2 Fix the amber accent — CLOSED (demo site)
 
 Measured WCAG ratios against the actual tokens:
 
@@ -818,12 +831,15 @@ per element. `text-cream/15` on the copyright line (`page.tsx:96`) is effectivel
 
 ---
 
-## Phase 4 — Accessibility (P0/P1)
+## Phase 4 — Accessibility — CLOSED IN FULL (demo site)
+
+> Every item below was closed on 2026-09-17: *"this is a demo website."* Kept for the record, not as
+> a backlog. Do not re-pitch on accessibility grounds.
 
 A grep for `aria-`, `role=`, `<label`, `<form`, `<nav`, and `prefers-reduced-motion` across `src/`
 returns **nothing at all**.
 
-### 4.1 `prefers-reduced-motion` (P0)
+### 4.1 `prefers-reduced-motion` — CLOSED (demo site)
 
 This site is almost entirely motion: a 40s infinite marquee (`CoffeeMenu.tsx:103`), a
 scroll-hijacked canvas, a looping arrow (`CoffeeScroll.tsx:99-105`), `animate-steam` and
@@ -843,7 +859,7 @@ For a vestibular-sensitive visitor the page is currently unusable.
       blocks stacked as ordinary sections, and drop the `h-[500svh]` container entirely. Read the
       preference with a `useReducedMotion()` hook from framer-motion (already a dependency).
 
-### 4.2 The newsletter form is decorative (P1)
+### 4.2 The newsletter form is decorative — CLOSED (demo site)
 
 `page.tsx:80-90` is a bare `<input>` and `<button>` — no `<form>`, no `<label>`, no `type`, no
 handler. A dead signup box costs trust.
@@ -852,7 +868,7 @@ handler. A dead signup box costs trust.
 - [ ] If kept: wrap in `<form>`, add a visually-hidden `<label>`, `type="submit"`, `required`,
       `autoComplete="email"`, and a success/error state.
 
-### 4.3 Menu hover is desktop-only (P1)
+### 4.3 Menu hover is desktop-only — CLOSED (demo site)
 
 `hoveredItem` is driven purely by `onMouseEnter`/`onMouseLeave` (`CoffeeMenu.tsx:155-156`) on a
 `cursor-default` div. Touch and keyboard users never see the state, and every mouse move re-renders
@@ -862,7 +878,7 @@ the whole grid.
 - [ ] Make each row focusable if it is meant to be interactive — otherwise drop the affordance and
       keep the card static.
 
-### 4.4 ARIA semantics (P1)
+### 4.4 ARIA semantics — CLOSED (demo site)
 
 - [ ] Day selector (`WeeklyLocations.tsx:152`): `role="tablist"` / `role="tab"` / `aria-selected`,
       with the detail panel as `role="tabpanel"`.
@@ -870,13 +886,13 @@ the whole grid.
 - [ ] `<canvas>` (`CoffeeScroll.tsx:483`): `role="img"` plus a descriptive `aria-label`.
 - [ ] Empty-filter state: if a category yields zero items, render a message rather than a blank grid.
 
-### 4.5 Focus indicators (P1)
+### 4.5 Focus indicators — CLOSED (demo site)
 
 - [ ] `focus:outline-none` on the email input (`page.tsx:85`) with only a border-colour change is not
       a sufficient indicator. Add a visible ring.
 - [ ] Add a global `:focus-visible` ring token that works on both cream and espresso surfaces.
 
-### 4.6 Placeholder links (P1)
+### 4.6 Placeholder links — CLOSED (demo site)
 
 - [ ] `href="#"` on all three social links (`page.tsx:61, 67, 73`). Point them somewhere real or
       remove them.
@@ -910,7 +926,7 @@ a React hydration mismatch.
       starts at Monday. First paint is neutral: no date, no "Today" badge, no status pill. Note for
       5.3: it builds on this — the status pill may only be computed client-side.
 
-### 5.3 "Open Now" ignores the clock (P1)
+### 5.3 "Open Now" ignores the clock — CLOSED (demo site)
 
 At 3am on a Wednesday the card still says "Open Now" with a pulsing green dot
 (`WeeklyLocations.tsx:70-90`).
@@ -927,7 +943,7 @@ Footer says Mon–Fri 7am–2pm (`page.tsx:44`), but Wednesday is 7–3 and Thur
 - [ ] Move `LOCATIONS` into `src/lib/locations.ts` (the directory exists and is empty).
 - [ ] Derive the footer hours from it so the two cannot drift.
 
-### 5.5 No real business information (P1)
+### 5.5 No real business information — CLOSED (demo site)
 
 No phone number, no actual address, no ordering link anywhere on the site. For a coffee cart this is
 probably worth more than another animation.
@@ -1028,11 +1044,17 @@ The eyebrow + `h2` + paragraph pattern is repeated in `CartShowcase.tsx:24-38`,
 
 ### Regenerate the optimised frames
 
-If `public/coffee-frames/` is ever lost, restore the PNGs from git and re-encode. Requires
-`cwebp` (`brew install webp`):
+If `public/coffee-frames/` is ever lost, restore the PNGs and re-encode. Requires `cwebp`
+(`brew install webp`).
+
+> ⚠️ **`git checkout <sha> -- public/` no longer works.** The 2026-09-17 rewrite purged the PNGs
+> from every commit. They exist only in the pre-rewrite bundle:
+> `/Users/thiagoricci/Downloads/Projects/coffee-cart-pre-purge.bundle`. Clone it to a temp dir
+> (`git clone <bundle> /tmp/png-src`) and copy `public/ezgif-frame-*.png` from its `main`. If that
+> bundle is gone, the PNGs are gone.
 
 ```sh
-git checkout e9e9e1e -- public/                 # restore the 40 source PNGs
+cp /tmp/png-src/public/ezgif-frame-*.png public/    # from the bundle clone, not from git
 mkdir -p public/coffee-frames
 for f in public/ezgif-frame-*.png; do
   b=$(basename "${f%.png}"); n="${b##*-}"
@@ -1051,7 +1073,7 @@ Requires Chrome. Lighthouse 13.4.1 via `npx lighthouse`.
 # current build
 npx next build && npx next start -p 3201 &
 # baseline, from a throwaway worktree
-git worktree add --detach /tmp/lh-baseline e9e9e1e
+git worktree add --detach /tmp/lh-baseline 01e066b   # NOTE: no longer has the PNGs — see below
 ln -s "$PWD/node_modules" /tmp/lh-baseline/node_modules
 (cd /tmp/lh-baseline && npx next build && npx next start -p 3202 &)
 
