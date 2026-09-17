@@ -13,7 +13,7 @@ anything earlier except where noted.
 
 ## START HERE — session handoff
 
-**Last updated:** 2026-09-17, session 7 — one reported bug (8.2), uncommitted.
+**Last updated:** 2026-09-17, end of session 7 — one reported bug (8.2), fixed and pushed.
 
 ### Where things stand
 
@@ -52,18 +52,37 @@ anything earlier except where noted.
 - **3.1's area darkening** — scrims and pools were tried four ways, all measured, all rejected on
   looks. The shipped hero trades AA for imagery deliberately. Read *Final state* under 3.1.
 
-**Everything is committed and pushed** to `origin/main` as of 2026-09-17 (session 4). See
-*Git state* below — the repo history was also rewritten to purge the original PNGs.
+**Everything is committed and pushed** to `origin/main` as of 2026-09-17 (session 7). See
+*Git state* below — the repo history was also rewritten to purge the original PNGs, back in
+session 4.
 
 ### Git state — read this before doing anything
 
-`main` is clean and **in sync with `origin/main` at `25b5a62`** (verified with `git fetch`, not just
-local state). Session 6 was pushed on 2026-09-17 at the human's go-ahead, in two pushes — ten
-commits (`acd7659..6415a43`), then three more once the reported mobile bug was fixed
-(`6415a43..25b5a62`). Fast-forward both times: no force, no history rewrite.
+`main` is clean and **in sync with `origin/main`**, whose tip is the Phase 8.2 work at `534e095`
+plus this file's own follow-up commit on top (a `docs(plan)` note always lands after the SHA it
+describes — that lag is why the section below quoted a stale `25b5a62`). Verified with `git fetch`,
+not just local state. Every push so far has been a fast-forward: no force, no history rewrite since
+session 4's purge.
 
-Session 6 (2026-09-17), newest first — the whole of Phase 7, then the Phase 8 bug the human reported
-from a phone, plus session 5's work which arrived uncommitted and was committed first so the Phase 7
+Session 7 (2026-09-17) — the Phase 8 bug the human reported from a phone for the *second* time,
+pushed at their go-ahead as `a562821..534e095`:
+
+```
+534e095 docs(plan): record the fragment bug as Phase 8.2
+9d3ef12 fix(hero): stop the CTA hash from reopening the page on Find Us Today   8.2
+```
+
+Two docs commits closed out session 6 after its own Git-state note was written, which is why the
+SHA above is not the one that note quoted:
+
+```
+a562821 docs(plan): drop a memory-style link from the repo doc
+463f6b6 docs(plan): record the second push and the two open loose ends
+```
+
+Session 6 (2026-09-17) was pushed in two goes — ten commits (`acd7659..6415a43`), then three more
+once the first mobile bug was fixed (`6415a43..25b5a62`). Newest first — the whole of Phase 7, then
+Phase 8.1, plus session 5's work which arrived uncommitted and was committed first so the Phase 7
 diffs stood on their own:
 
 ```
@@ -116,8 +135,9 @@ something secret.
 
 ### Do this next
 
-**Nothing is queued.** One bug arrived after Phase 7 closed and was fixed the same session — see
-*Phase 8*. Phase 7 — the five items the human asked for at the end of session 5 — was
+**Nothing is queued.** Two bugs have arrived since Phase 7 closed, each reported from a phone and
+each fixed the session it landed in — see *Phase 8*. They turned out to be two different mechanisms
+behind one symptom, so read 8.1 and 8.2 together before touching how the page opens. Phase 7 — the five items the human asked for at the end of session 5 — was
 implemented in full in session 6, in the agreed order, each with its own commit and its own section
 in this file closed with the evidence:
 
@@ -130,18 +150,18 @@ in this file closed with the evidence:
 | 5.7 | `77499b1` | Metadata + four generated PNGs; sources in `tools/brand/` |
 
 Every Phase 7 acceptance criterion is met — see *Acceptance criteria — Phase 7*. Everything is
-committed **and pushed**; the working tree is clean and `npm test`, `npx tsc --noEmit` and
-`npx next lint` were all green at the end of session 6.
+committed **and pushed**; the working tree is clean and `npm test` (14), `npx tsc --noEmit` and
+`npx next lint` were all green at the end of session 7.
 
 **Two things left dangling, both the human's call:**
 
 - **`metadataBase` falls back to `http://localhost:3000`** because the site has no domain. Set
   `NEXT_PUBLIC_SITE_URL`, or deploy to Vercel (which supplies the host), and every absolute URL in
   the link preview follows. Until then the OG tags point at localhost. See 5.7.
-- **A `next dev` was left running on :3000**, started during session 6 after the inherited one was
-  found serving 404 chunks. Log: `/tmp/claude-501/nextdev.log`. Kill it or reuse it, but check the
-  port before measuring anything: a dev server inherited from an earlier session can already be
-  serving 404 chunks, which looks like a component bug rather than a stale server.
+- **Two `next dev` servers are still running — :3000 (session 6) and :3210 (session 7)**, both
+  answering 200 as of the end of session 7. Kill them or reuse them, but check the port before
+  measuring anything: a dev server inherited from an earlier session can already be serving 404
+  chunks, which looks like a component bug rather than a stale server.
 
 **Before picking anything up, ask.** What is still open in this file is *not* agreed work:
 
@@ -1368,6 +1388,9 @@ reload lands at **0** at both 390 and 1280 px.
 **Trade-off, accepted:** browser-restored scroll is now off for the whole site, so a *back*
 navigation into the page also opens at the top. Nothing in the flow relies on that — every outbound
 link (directions, the OSM map) opens in a new tab.
+
+**This fix was not the whole story.** The same symptom came back from the same phone, by a different
+route — the URL fragment, which scroll restoration never governed. See 8.2 above.
 
 ---
 
