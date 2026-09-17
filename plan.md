@@ -13,7 +13,7 @@ anything earlier except where noted.
 
 ## START HERE — session handoff
 
-**Last updated:** 2026-09-17, end of session 6.
+**Last updated:** 2026-09-17, session 7 — one reported bug (8.2), uncommitted.
 
 ### Where things stand
 
@@ -36,6 +36,7 @@ anything earlier except where noted.
 | 6.1 (s6) | Marquee seam gone: **0 px** error at 390, 1440 and 2560 |
 | 5.7 (s6) | Favicon, apple icon and a 1200×630 link card, generated from `tools/brand/` |
 | 8.1 (s6) | Page always opens at the hero — browser scroll restoration turned off |
+| 8.2 (s7) | …and opens at the hero from a kept `#find-us-today` URL too — the other way in |
 
 **Closed by human decision — do not reopen without new information:**
 
@@ -1300,6 +1301,49 @@ Commits, in order: `5da0312` (5.4), `1f40dd5` (7.1), `facb58a` (7.2), `5a9fd45` 
 ## Phase 8 — reported issues
 
 Things the human hit on a real device, rather than items found by review. Newest first.
+
+### 8.2 Still opening on Find Us Today — the URL fragment, not the scroll — FIXED (2026-09-17)
+
+Reported from a phone after 8.1 shipped: *"when I open the page on a mobile it goes straight to the
+Find us section and skips the Hero animation."*
+
+**Cause: `#find-us-today` in the URL.** 8.1 fixed scroll *restoration*; a fragment navigation is a
+different mechanism and restoration never covered it. The hero's closing CTA is
+`<a href="#find-us-today">Visit Our Cart</a>`, so tapping it rewrites the address bar to
+`/#find-us-today`. Whatever the visitor keeps after that — a bookmark, a history suggestion (phones
+offer the exact URL last visited), a link shared out of the browser — reopens on Find Us Today with
+the hero never played. Nothing else on the site has ever written that hash.
+
+Reproduced at 390 px over CDP, before the fix:
+
+| | before | after |
+|---|---|---|
+| fresh load `/` | 0 | 0 |
+| **cold load `/#find-us-today`** | **7876** (top of Find Us Today) | **0** |
+| tap Visit Our Cart | 7876, URL `/#find-us-today` | 7876, URL `/` |
+| reload straight after that tap | 0 | 0 |
+| reload after scrolling to 8000 (8.1) | 0 | 0 |
+
+Same five results at 1280×800, with the CTA landing at 6122 instead of 7876.
+
+Note the asymmetry that made this easy to miss: a *reload* of `/#find-us-today` already landed at 0,
+because a reload restores from history and 8.1 turned that off. Only a fresh navigation to the
+hashed URL honours the fragment — which is exactly the path a phone takes out of history or a
+bookmark, and not the path a desktop review session takes.
+
+**Fix, both ends:**
+
+- `src/components/CoffeeScroll.tsx` — the CTA scrolls with `scrollIntoView()` on a `preventDefault`ed
+  click, so a tap no longer writes the hash. `href` stays for middle-click and copy-link, and
+  `scroll-behavior: smooth` on `html` keeps the glide identical.
+- `src/app/layout.tsx` — the same inline `<head>` script that sets `scrollRestoration = "manual"` now
+  also drops an incoming fragment (`history.replaceState`) before the browser can act on it, so URLs
+  already saved on a phone open at the hero too.
+
+**Trade-off, accepted:** there is now no deep link into the page. That follows the rule 8.1 already
+set — the page always opens at the hero — and the CTA was the only thing generating the hash.
+
+---
 
 ### 8.1 The page opened on Find Us Today, not the hero — FIXED (2026-09-17)
 
