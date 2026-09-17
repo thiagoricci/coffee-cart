@@ -288,21 +288,27 @@ export default function CoffeeMenu() {
     <section className="relative py-24 md:py-32 bg-cream overflow-hidden">
       <div className="relative">
         <div className="overflow-hidden py-4 mb-16 border-y border-latte/20">
+          {/*
+            Four copies on a max-content track, sliding by exactly -50%: the
+            second half is identical to the first, so the reset is invisible at
+            any type size — a pixel distance cannot be, since the track is wider
+            at md. Four rather than two so the tail still covers a very wide
+            window at the end of the run.
+          */}
           <motion.div
-            animate={{ x: [0, -2400] }}
-            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-            className="flex whitespace-nowrap"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+            className="flex w-max whitespace-nowrap"
           >
-            {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map(
-              (item, i) => (
-                <span
-                  key={i}
-                  className="font-display text-2xl md:text-3xl text-walnut/50 mx-6 tracking-tight"
-                >
-                  {item}
-                </span>
-              )
-            )}
+            {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
+              <span
+                key={i}
+                className="font-display text-2xl md:text-3xl text-walnut/50 mx-6 tracking-tight"
+                aria-hidden={i >= MARQUEE_ITEMS.length}
+              >
+                {item}
+              </span>
+            ))}
           </motion.div>
         </div>
       </div>

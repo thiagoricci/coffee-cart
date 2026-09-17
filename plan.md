@@ -93,7 +93,8 @@ reviewing session 5's work. Read *Phase 7* below for the detail; the order is:
    swaps in a styled placeholder. **Start at 7.2.**
 3. ~~**7.2** — the session-5 invariants are untested.~~ **DONE** 2026-09-17 (session 6) —
    `npm test` runs 14 `node --test` checks. **Start at 6.1.**
-4. **6.1** — marquee seam, at the top of the section session 5 just polished.
+4. ~~**6.1** — marquee seam.~~ **DONE** 2026-09-17 (session 6) — four copies, `-50%`, measured
+   exact at 390/1440/2560. **Start at 5.7 — it is the last item in the queue.**
 5. **5.7** — favicon and OG tags, so the demo link doesn't preview blank.
 
 Session 5's work is committed as of session 6 (`2f1094f` for the code, `3161fc8` for this plan),
@@ -195,7 +196,7 @@ git rev-list --objects --all | grep -c ezgif   # expect: 0
 | 5.5 | ~~Add real business info + JSON-LD~~ **CLOSED** — demo site, no real business | — | M | `layout.tsx`, `page.tsx` |
 | 5.6 | Server-rendered `<h1>` | P1 | S | `CoffeeScroll.tsx` |
 | 5.7 | Site metadata (favicon, OG, theme-color) — **QUEUED 5th** | P2 | S | `layout.tsx`, `src/app/` |
-| 6.1 | Seamless marquee loop — **QUEUED 4th** | P2 | S | `CoffeeMenu.tsx` |
+| 6.1 | ~~Seamless marquee loop~~ **DONE** 2026-09-17 (session 6) | P2 | S | `CoffeeMenu.tsx` |
 | 6.2 | `sizes` on `<Image fill>` | P2 | XS | `CartShowcase.tsx` |
 | 6.3 | JS-independent section reveals | P2 | S | `CartShowcase.tsx`, `WeeklyLocations.tsx` |
 | 6.4 | Reconsider the grain overlay | P2 | XS | `globals.css` |
@@ -1011,13 +1012,31 @@ without running JS.
 
 ## Phase 6 — Polish and refactors (P2)
 
-### 6.1 Marquee won't loop seamlessly
+### 6.1 Marquee won't loop seamlessly — DONE (2026-09-17)
 
 `animate={{ x: [0, -2400] }}` (`CoffeeMenu.tsx:103`) is a hardcoded pixel distance, but the track
 width changes between `text-2xl` and `md:text-3xl`. At one of those breakpoints there is a visible
 jump every 40s.
 
-- [ ] Duplicate the item list exactly twice and animate to `-50%` instead.
+- [x] ~~Duplicate the item list and animate to `-50%` instead.~~
+
+**Done 2026-09-17 (session 6).** Four copies of `MARQUEE_ITEMS` on a `w-max` track, animated
+`x: ["0%", "-50%"]` over 60s. `w-max` is the load-bearing part: a plain flex child is as wide as its
+parent, so `-50%` would have measured the viewport rather than the track.
+
+Two copies would also loop cleanly, but at the end of the run only one copy's width is left to cover
+the window — fine at 1440, a gap on a 2560 monitor. Four copies leave two copies' width in hand.
+
+Measured over CDP, comparing the animated distance against the width of the two leading copies:
+
+| Viewport | Half the track | Two copies | Δ | Tail ≥ viewport | Speed |
+|---|---|---|---|---|---|
+| 390 | 3375.92 px | 3375.92 px | **0** | yes | 56 px/s |
+| 1440 | 3979.89 px | 3979.89 px | **0** | yes | 66 px/s |
+| 2560 | 3979.89 px | 3979.89 px | **0** | yes | 66 px/s |
+
+The old `-2400` was neither: 60 px/s and a seam at whichever breakpoint it did not match. The three
+duplicate copies are `aria-hidden`.
 
 ### 6.2 `<Image fill>` without `sizes`
 
@@ -1085,7 +1104,7 @@ items promoted into this queue rather than renumbered — follow their own secti
 | 1 | ~~**5.4** Footer hours contradict `LOCATIONS`~~ | **done** 2026-09-17 | P1 | S | `page.tsx`, `src/lib/locations.ts` |
 | 2 | ~~**7.1** Map has no WebGL fallback~~ | **done** 2026-09-17 | P1 | S | `WeeklyLocations.tsx` |
 | 3 | ~~**7.2** Session-5 invariants are untested~~ | **done** 2026-09-17 | P1 | M | `tests/`, `package.json` |
-| 4 | **6.1** Seamless marquee loop | existing | P2 | S | `CoffeeMenu.tsx` |
+| 4 | ~~**6.1** Seamless marquee loop~~ | **done** 2026-09-17 | P2 | S | `CoffeeMenu.tsx` |
 | 5 | **5.7** Favicon and link metadata | existing, re-framed | P2 | S | `layout.tsx`, `src/app/` |
 
 ### 7.0 Start with 5.4 — its blocker is gone
