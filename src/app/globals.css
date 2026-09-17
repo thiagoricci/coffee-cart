@@ -7,6 +7,7 @@
   --color-espresso: #2C1810;
   --color-walnut: #5C4033;
   --color-amber: #C4841D;
+  --color-amber-light: #E6B863; /* dark-background accent; keep in sync with tailwind.config.ts */
   --color-latte: #D4C4A8;
   --color-foam: #FAF6F0;
 }

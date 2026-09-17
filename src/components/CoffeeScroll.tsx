@@ -4,15 +4,53 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 
 const FRAME_COUNT = 40;
-const LOADING_TIMEOUT_MS = 3500;
 
-function getFramePath(index: number): string {
-  return `/ezgif-frame-${String(index + 1).padStart(3, "0")}.png`;
+// Frames that must decode before the hero is allowed to paint. The rest stream in
+// afterwards; drawFrame() falls back to the nearest loaded neighbour until they land.
+const PRIORITY_FRAME_COUNT = 5;
+
+// Safety net only — with the priority batch above, this should not fire in practice.
+const LOADING_TIMEOUT_MS = 2000;
+
+// Scroll progress at which the strip reaches its final frame. The remaining
+// 1 - FRAME_CURVE_END is a deliberate hold on the closing CTA; it used to be 0.65,
+// which left ~3.6 screens of frozen frame on mobile before the hero let go.
+// TEXT_SECTIONS below are expressed in the same progress space, so a frame is at
+// progress * (FRAME_COUNT - 1) / FRAME_CURVE_END — change this and the text beats
+// slide off the frames they were composed against.
+const FRAME_CURVE_END = 0.9;
+
+// Two encodings of the same 40 frames. The portrait set is a centre *crop* of the
+// full frame, not a downscale: drawFrame cover-fits to viewport height, so a phone
+// in portrait only ever sees the middle ~26-32% of a 16:9 frame. Cropping to that
+// slice renders pixel-for-pixel identically while saving ~26% of the bytes —
+// whereas downscaling would soften the view that is already upscaled hardest
+// (3.55x on an iPhone 14 Pro, against 1.5x on a 1080p desktop).
+const FRAME_SETS = {
+  full: { dir: "coffee-frames", aspect: 1280 / 720 },
+  portrait: { dir: "coffee-frames-portrait", aspect: 544 / 720 },
+} as const;
+
+type FrameSet = keyof typeof FRAME_SETS;
+
+// The crop only holds while the viewport is narrower than the cropped frame; past
+// that, cover-fit starts cropping vertically and reframes the shot. 544/720 clears
+// every common phone and small tablet in portrait, including the squarest cases
+// with the URL bar showing (iPhone SE 0.678, iPad 0.745) — so the set does not
+// flip when the mobile toolbar collapses, only on a real rotation.
+function pickFrameSet(): FrameSet {
+  return window.innerWidth / window.innerHeight <= FRAME_SETS.portrait.aspect
+    ? "portrait"
+    : "full";
+}
+
+function getFramePath(set: FrameSet, index: number): string {
+  return `/${FRAME_SETS[set].dir}/frame-${String(index + 1).padStart(3, "0")}.webp`;
 }
 
 function LoadingScreen({ progress }: { progress: number }) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cream">
+    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-cream">
       <div className="relative mb-8">
         <div className="w-20 h-20 rounded-full border-2 border-latte" />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -75,18 +113,18 @@ const TEXT_SECTIONS: TextSection[] = [
   {
     startFadeIn: 0.0,
     startHold: 0.0,
-    startFadeOut: 0.07,
-    endFadeOut: 0.10,
+    startFadeOut: 0.0969,
+    endFadeOut: 0.1385,
     position: "center",
     content: (
       <div className="text-center">
-        <h1 className="font-display text-6xl md:text-8xl lg:text-9xl text-cream/90 tracking-tight leading-none">
+        <h1 className="font-display text-6xl md:text-8xl lg:text-9xl text-cream tracking-tight leading-none">
           Brew & Go
         </h1>
-        <p className="font-body text-lg md:text-xl text-cream/60 mt-6 tracking-wide">
+        <p className="font-body text-lg md:text-xl text-cream mt-6 tracking-wide">
           Craft in Every Cup
         </p>
-        <div className="mt-8 flex items-center justify-center gap-2 text-cream/40">
+        <div className="mt-8 flex items-center justify-center gap-2 text-cream">
           <span className="font-body text-xs uppercase tracking-[0.3em]">
             Scroll to explore
           </span>
@@ -102,74 +140,74 @@ const TEXT_SECTIONS: TextSection[] = [
     ),
   },
   {
-    startFadeIn: 0.12,
-    startHold: 0.17,
-    startFadeOut: 0.19,
-    endFadeOut: 0.22,
+    startFadeIn: 0.1662,
+    startHold: 0.2354,
+    startFadeOut: 0.2631,
+    endFadeOut: 0.3046,
     position: "top-right" as const,
     content: (
       <div className="text-right max-w-md ml-auto">
-        <span className="font-body text-xs uppercase tracking-[0.3em] text-amber">
+        <span className="font-body text-xs uppercase tracking-[0.3em] text-amber-light">
           01 — The Beans
         </span>
-        <h2 className="font-display text-4xl md:text-6xl text-cream/90 tracking-tight mt-4 leading-tight">
+        <h2 className="font-display text-4xl md:text-6xl text-cream tracking-tight mt-4 leading-tight">
           Freshly Roasted Beans
         </h2>
-        <p className="font-body text-base text-cream/60 mt-4 leading-relaxed">
+        <p className="font-body text-base text-cream mt-4 leading-relaxed">
           Sourced from highland farms, each bean is roasted to unlock its deepest character.
         </p>
       </div>
     ),
   },
   {
-    startFadeIn: 0.24,
-    startHold: 0.29,
-    startFadeOut: 0.31,
-    endFadeOut: 0.34,
+    startFadeIn: 0.3323,
+    startHold: 0.4015,
+    startFadeOut: 0.4292,
+    endFadeOut: 0.4708,
     position: "left",
     content: (
       <div className="text-left max-w-md">
-        <span className="font-body text-xs uppercase tracking-[0.3em] text-amber">
+        <span className="font-body text-xs uppercase tracking-[0.3em] text-amber-light">
           02 — Grounded
         </span>
-        <h2 className="font-display text-4xl md:text-6xl text-cream/90 tracking-tight mt-4 leading-tight">
+        <h2 className="font-display text-4xl md:text-6xl text-cream tracking-tight mt-4 leading-tight">
           Rooted in Tradition
         </h2>
-        <p className="font-body text-base text-cream/60 mt-4 leading-relaxed">
+        <p className="font-body text-base text-cream mt-4 leading-relaxed">
           From soil to sip, we honor the origins of every harvest and the hands that nurture it.
         </p>
       </div>
     ),
   },
   {
-    startFadeIn: 0.36,
-    startHold: 0.41,
-    startFadeOut: 0.43,
-    endFadeOut: 0.46,
+    startFadeIn: 0.4985,
+    startHold: 0.5677,
+    startFadeOut: 0.5954,
+    endFadeOut: 0.6369,
     position: "top-right" as const,
     content: (
       <div className="text-right max-w-md ml-auto">
-        <span className="font-body text-xs uppercase tracking-[0.3em] text-amber">
+        <span className="font-body text-xs uppercase tracking-[0.3em] text-amber-light">
           03 — The Process
         </span>
-        <h2 className="font-display text-4xl md:text-6xl text-cream/90 tracking-tight mt-4 leading-tight">
+        <h2 className="font-display text-4xl md:text-6xl text-cream tracking-tight mt-4 leading-tight">
           Handcrafted with Care
         </h2>
-        <p className="font-body text-base text-cream/60 mt-4 leading-relaxed">
+        <p className="font-body text-base text-cream mt-4 leading-relaxed">
           Every pour is intentional. Every cup, a small act of devotion to the craft.
         </p>
       </div>
     ),
   },
   {
-    startFadeIn: 0.47,
-    startHold: 0.53,
+    startFadeIn: 0.6508,
+    startHold: 0.7338,
     startFadeOut: 0.94,
     endFadeOut: 1.0,
     position: "center" as const,
     content: (
       <div className="text-center">
-        <h2 className="font-display text-4xl md:text-6xl text-espresso tracking-tight mt-4 leading-tight font-bold">
+        <h2 className="font-display text-4xl md:text-6xl text-cream tracking-tight mt-4 leading-tight font-bold">
           Taste the Difference
         </h2>
         <motion.a
@@ -222,7 +260,17 @@ function TextOverlay({
       className={`absolute inset-0 flex ${positionClasses[section.position]} pointer-events-none z-10`}
       style={{ opacity }}
     >
-      <div className="pointer-events-auto">{section.content}</div>
+      {/*
+        Contrast comes from shadowing the letterforms, not from darkening the frame.
+        Every area-based approach was rejected on looks: a full-frame scrim flattened
+        the hero, and a radial pool behind each block showed as a brown cloud over the
+        opening frame. This leaves the frames untouched at full brightness. The tight
+        0/0/3px pass haloes small glyphs on all sides; the wide one lifts them off
+        busy frames. Note it buys no *measured* contrast — see plan.md 3.1.
+      */}
+      <div className="pointer-events-auto relative [filter:drop-shadow(0_0_3px_rgba(44,24,16,0.92))_drop-shadow(0_2px_10px_rgba(44,24,16,0.8))]">
+        {section.content}
+      </div>
     </div>
   );
 }
@@ -231,63 +279,23 @@ export default function CoffeeScroll() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
-  const loadedFramesRef = useRef<boolean[]>(Array(FRAME_COUNT).fill(false));
-  const settledFramesRef = useRef<boolean[]>(Array(FRAME_COUNT).fill(false));
   const [loadedCount, setLoadedCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const currentFrameRef = useRef(0);
-
-  useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
-
-  // Lock body scroll during loading to prevent mobile jump
-  useEffect(() => {
-    if (!isLoaded) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-    };
-  }, [isLoaded]);
-
-  // Reset scroll aggressively after content mounts
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    // Temporarily disable smooth scroll so the reset is instant
-    const prev = document.documentElement.style.scrollBehavior;
-    document.documentElement.style.scrollBehavior = 'auto';
-
-    const reset = () => {
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      window.scrollTo(0, 0);
-    };
-    reset();
-    requestAnimationFrame(() => {
-      reset();
-      requestAnimationFrame(() => {
-        reset();
-        // Restore smooth scrolling after DOM has settled
-        document.documentElement.style.scrollBehavior = prev;
-      });
-    });
-  }, [isLoaded]);
+  const [frameSet, setFrameSet] = useState<FrameSet>(() =>
+    typeof window === "undefined" ? "full" : pickFrameSet()
+  );
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  const frameIndex = useTransform(scrollYProgress, [0, 0.65, 1], [0, FRAME_COUNT - 1, FRAME_COUNT - 1]);
+  const frameIndex = useTransform(
+    scrollYProgress,
+    [0, FRAME_CURVE_END, 1],
+    [0, FRAME_COUNT - 1, FRAME_COUNT - 1]
+  );
 
   useMotionValueEvent(frameIndex, "change", (latest) => {
     const newFrame = Math.round(latest);
@@ -349,14 +357,24 @@ export default function CoffeeScroll() {
 
   useEffect(() => {
     let isCancelled = false;
-    let loaded = 0;
+    let loadedTotal = 0;
+    let prioritySettled = 0;
     let hasRevealedHero = false;
+    let hasStartedRemaining = false;
 
-    loadedFramesRef.current = Array(FRAME_COUNT).fill(false);
-    settledFramesRef.current = Array(FRAME_COUNT).fill(false);
-
+    const settled = Array(FRAME_COUNT).fill(false);
     const images = Array.from({ length: FRAME_COUNT }, () => new Image());
-    imagesRef.current = images;
+
+    // On the first load the canvas has nothing to show, so publish the new images
+    // straight away and let drawFrame's nearest-neighbour fallback fill the gaps.
+    // On a frame-set swap the old images stay on imagesRef until the new set's
+    // priority batch is in, so a rotation never blanks the canvas.
+    const isInitialLoad = imagesRef.current.length === 0;
+    const publishImages = () => {
+      imagesRef.current = images;
+      drawFrame(currentFrameRef.current);
+    };
+    if (isInitialLoad) imagesRef.current = images;
 
     const revealHero = () => {
       if (hasRevealedHero || isCancelled) return;
@@ -364,40 +382,75 @@ export default function CoffeeScroll() {
       setIsLoaded(true);
     };
 
-    const markFrameSettled = (index: number, didLoad: boolean) => {
-      if (isCancelled || settledFramesRef.current[index]) return;
+    function markFrameSettled(index: number, didLoad: boolean) {
+      if (isCancelled || settled[index]) return;
 
-      settledFramesRef.current[index] = true;
-      loadedFramesRef.current[index] = didLoad;
-      loaded += 1;
-      setLoadedCount(loaded);
+      settled[index] = true;
+
+      // Only successful decodes count — a broken strip must never report 100%.
+      if (didLoad) {
+        loadedTotal += 1;
+        setLoadedCount(loadedTotal);
+      }
 
       if (index === 0 && didLoad) {
         currentFrameRef.current = 0;
-        revealHero();
+      }
+
+      if (index < PRIORITY_FRAME_COUNT) {
+        prioritySettled += 1;
+        if (prioritySettled >= PRIORITY_FRAME_COUNT) {
+          if (!isInitialLoad) publishImages();
+          revealHero();
+          startRemainingFrames();
+        }
+      }
+    }
+
+    const loadFrame = (index: number) => {
+      const img = images[index];
+      img.decoding = "async";
+      img.onload = () => markFrameSettled(index, true);
+      img.onerror = () => markFrameSettled(index, false);
+      img.src = getFramePath(frameSet, index);
+
+      // A cached frame can already be complete before the handlers attach.
+      if (img.complete) {
+        markFrameSettled(index, img.naturalWidth > 0);
       }
     };
 
+    function startRemainingFrames() {
+      if (hasStartedRemaining || isCancelled) return;
+      hasStartedRemaining = true;
+      for (let i = PRIORITY_FRAME_COUNT; i < FRAME_COUNT; i++) {
+        loadFrame(i);
+      }
+    }
+
     const revealTimer = window.setTimeout(() => {
+      if (!isInitialLoad) publishImages();
       revealHero();
+      startRemainingFrames();
     }, LOADING_TIMEOUT_MS);
 
-    for (let i = 0; i < FRAME_COUNT; i++) {
-      const img = images[i];
-      img.decoding = "async";
-      img.onload = () => markFrameSettled(i, true);
-      img.onerror = () => markFrameSettled(i, false);
-      img.src = getFramePath(i);
-
-      if (img.complete) {
-        markFrameSettled(i, img.naturalWidth > 0);
-      }
+    for (let i = 0; i < PRIORITY_FRAME_COUNT; i++) {
+      loadFrame(i);
     }
 
     return () => {
       isCancelled = true;
       window.clearTimeout(revealTimer);
     };
+  }, [frameSet, drawFrame]);
+
+  // Rotation is the only thing that should change the set — pickFrameSet has enough
+  // margin that a collapsing mobile URL bar does not cross the threshold.
+  useEffect(() => {
+    const syncFrameSet = () => setFrameSet(pickFrameSet());
+    syncFrameSet();
+    window.addEventListener("resize", syncFrameSet);
+    return () => window.removeEventListener("resize", syncFrameSet);
   }, []);
 
   useEffect(() => {
@@ -432,16 +485,18 @@ export default function CoffeeScroll() {
     }
   }, [isLoaded, drawFrame]);
 
-  if (!isLoaded) {
-    return <LoadingScreen progress={(loadedCount / FRAME_COUNT) * 100} />;
-  }
-
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[1100svh] md:h-[800vh]"
+      className="relative w-full h-[820svh] md:h-[600vh]"
     >
       <div className="sticky top-0 z-20 h-screen min-h-[100svh] w-full">
+        {!isLoaded && (
+          <LoadingScreen
+            progress={Math.min(100, (loadedCount / PRIORITY_FRAME_COUNT) * 100)}
+          />
+        )}
+
         <div className="relative h-full w-full overflow-hidden bg-cream">
           <canvas
             ref={canvasRef}
