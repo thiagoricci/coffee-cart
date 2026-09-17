@@ -181,8 +181,12 @@ npx tsc --noEmit        # expect: clean
 npm test                # expect: 14 tests pass (node --test, added 7.2)
 npx next build          # expect: success, route / at ~57 kB (was 51.4 kB before session 5)
 # ⚠️ If `next dev` is running, `next build` overwrites its .next and breaks the dev server
-# mid-session (this happened on 2026-09-16). Build in a copy instead: cp src public + configs to
-# a temp dir, symlink node_modules, build there.
+# mid-session (this happened on 2026-09-16). Build in a copy instead:
+#   B=$(mktemp -d); cp -R src public "$B"/
+#   cp package.json tsconfig.json next.config.js postcss.config.js tailwind.config.ts "$B"/
+#   ln -s "$PWD/node_modules" "$B"/node_modules && (cd "$B" && npx next build)
+# Both .js configs matter: without postcss.config.js the build still succeeds but Tailwind
+# never runs, so the CSS it emits is not the site's (session 6 got this wrong the first time).
 ls public/coffee-frames | wc -l            # expect: 40
 du -sh public/coffee-frames                # expect: 2.3M
 ls public/coffee-frames-portrait | wc -l   # expect: 40
