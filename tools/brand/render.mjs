@@ -1,0 +1,15 @@
+const [,, port, url, w, h, outPath] = process.argv;
+const t = await (await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(url)}`, { method: "PUT" })).json();
+const ws = new WebSocket(t.webSocketDebuggerUrl);
+let id = 0; const pending = new Map();
+const send = (m, p = {}) => new Promise((res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method: m, params: p })); });
+ws.addEventListener("message", (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m.result); pending.delete(m.id); } });
+await new Promise((r) => ws.addEventListener("open", r));
+await send("Emulation.setDeviceMetricsOverride", { width: Number(w), height: Number(h), deviceScaleFactor: 1, mobile: false });
+await new Promise((r) => setTimeout(r, 4000));
+await send("Runtime.evaluate", { expression: "document.fonts ? document.fonts.ready.then(()=>true) : true", awaitPromise: true });
+await new Promise((r) => setTimeout(r, 1500));
+const shot = await send("Page.captureScreenshot", { format: "png", clip: { x: 0, y: 0, width: Number(w), height: Number(h), scale: 1 }, captureBeyondViewport: true });
+await (await import("node:fs/promises")).writeFile(outPath, Buffer.from(shot.data, "base64"));
+console.log("saved", outPath, Number(w) + "x" + Number(h));
+await fetch(`http://127.0.0.1:${port}/json/close/${t.id}`); ws.close();

@@ -1,0 +1,36 @@
+<!doctype html><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;width:1200px;height:630px;background:#F5F0E8;overflow:hidden}
+  .card{width:1200px;height:630px;display:flex;align-items:center;gap:64px;padding:0 80px;box-sizing:border-box;
+        font-family:"DM Sans",sans-serif;color:#2C1810;position:relative}
+  .rule{position:absolute;left:0;right:0;bottom:0;height:10px;background:#C4841D}
+  .copy{flex:1}
+  .eyebrow{font-size:22px;letter-spacing:.3em;text-transform:uppercase;color:#C4841D;font-weight:500}
+  h1{font-family:"Playfair Display",serif;font-size:128px;line-height:1;margin:22px 0 0;letter-spacing:-.02em;font-weight:400}
+  .tag{font-size:30px;line-height:1.5;color:#5C4033;margin-top:28px;max-width:19em}
+  .days{margin-top:44px;font-size:20px;letter-spacing:.18em;text-transform:uppercase;color:#5C4033;opacity:.65}
+  .mark{width:360px;height:470px;border-radius:40px;background:#2C1810;display:flex;align-items:center;justify-content:center;flex:none}
+</style>
+<div class="card">
+  <div class="copy">
+    <div class="eyebrow">Coffee cart &middot; Turlock, CA</div>
+    <h1>Brew &amp; Go</h1>
+    <div class="tag">Artisan coffee, handcrafted daily — from our cart to your cup.</div>
+    <div class="days">Mon &mdash; Sun &middot; A new stop every day</div>
+  </div>
+  <div class="mark">
+    <svg width="230" height="250" viewBox="0 0 100 112" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <path id="cup" d="M20,22 L80,22 L70,78 Q68,86 60,86 L40,86 Q32,86 30,78 Z"/>
+        <clipPath id="inside" clipPathUnits="userSpaceOnUse"><use href="#cup"/></clipPath>
+      </defs>
+      <use href="#cup" fill="#F5F0E8"/>
+      <g clip-path="url(#inside)"><rect x="18" y="22" width="64" height="19" fill="#C4841D"/></g>
+      <rect x="14" y="14.5" width="72" height="7.5" rx="3.75" fill="#F5F0E8"/>
+    </svg>
+  </div>
+  <div class="rule"></div>
+</div>

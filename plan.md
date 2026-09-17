@@ -95,7 +95,11 @@ reviewing session 5's work. Read *Phase 7* below for the detail; the order is:
    `npm test` runs 14 `node --test` checks. **Start at 6.1.**
 4. ~~**6.1** — marquee seam.~~ **DONE** 2026-09-17 (session 6) — four copies, `-50%`, measured
    exact at 390/1440/2560. **Start at 5.7 — it is the last item in the queue.**
-5. **5.7** — favicon and OG tags, so the demo link doesn't preview blank.
+5. ~~**5.7** — favicon and OG tags.~~ **DONE** 2026-09-17 (session 6).
+
+**Phase 7 is complete.** Nothing is queued. The open items left in this file are 5.6 (server-rendered
+`<h1>`) and the Phase 6 leftovers 6.2, 6.3, 6.4, 6.6 and 6.8 — none of them agreed work; ask before
+starting one.
 
 Session 5's work is committed as of session 6 (`2f1094f` for the code, `3161fc8` for this plan),
 so Phase 7 diffs stand on their own.
@@ -158,6 +162,7 @@ ls public/coffee-frames-portrait | wc -l   # expect: 40
 du -sh public/coffee-frames-portrait       # expect: 1.7M
 
 ls src/lib                 # expect: drinks.ts, locations.ts, useCanHover.ts, useHasWebGL.ts
+ls src/app/*.png           # expect: apple-icon, icon, opengraph-image, twitter-image (5.7)
 ls tests                   # expect: drinks.test.ts, locations.test.ts (session 6)
 
 git status -sb                             # expect: clean (session 5 committed in session 6)
@@ -195,7 +200,7 @@ git rev-list --objects --all | grep -c ezgif   # expect: 0
 | 5.4 | ~~Derive footer hours from `LOCATIONS`~~ **DONE** 2026-09-17 (session 6) | P1 | S | `page.tsx`, `src/lib/locations.ts` |
 | 5.5 | ~~Add real business info + JSON-LD~~ **CLOSED** — demo site, no real business | — | M | `layout.tsx`, `page.tsx` |
 | 5.6 | Server-rendered `<h1>` | P1 | S | `CoffeeScroll.tsx` |
-| 5.7 | Site metadata (favicon, OG, theme-color) — **QUEUED 5th** | P2 | S | `layout.tsx`, `src/app/` |
+| 5.7 | ~~Site metadata (favicon, OG, theme-color)~~ **DONE** 2026-09-17 (session 6) | P2 | S | `layout.tsx`, `src/app/` |
 | 6.1 | ~~Seamless marquee loop~~ **DONE** 2026-09-17 (session 6) | P2 | S | `CoffeeMenu.tsx` |
 | 6.2 | `sizes` on `<Image fill>` | P2 | XS | `CartShowcase.tsx` |
 | 6.3 | JS-independent section reveals | P2 | S | `CartShowcase.tsx`, `WeeklyLocations.tsx` |
@@ -993,13 +998,29 @@ without running JS.
 - [ ] Render the hero heading in the server HTML — visually hidden during loading if necessary, or
       as part of the loading screen itself.
 
-### 5.7 Site metadata (P1)
+### 5.7 Site metadata (P1) — DONE (2026-09-17)
 
-`layout.tsx:18-21` has only `title` and `description`.
+- [x] ~~Add `metadataBase`, `openGraph` (with an OG image), `twitter`, and `themeColor`.~~
+- [x] ~~Add `src/app/icon.png` and `apple-icon.png`.~~
 
-- [ ] Add `metadataBase`, `openGraph` (with an OG image), `twitter`, and `themeColor`.
-- [ ] Add `src/app/icon.png` and `apple-icon.png` — there is currently no favicon of any kind, so the
-      site shares as a blank card.
+**Done 2026-09-17 (session 6).** `layout.tsx` now carries `metadataBase`, `openGraph`, `twitter`
+(`summary_large_image`) and a `viewport` export with `themeColor` — cream for light, espresso for
+dark. `themeColor` goes in `viewport`, not `metadata`; Next 14 warns otherwise.
+
+`metadataBase` is `NEXT_PUBLIC_SITE_URL` → `VERCEL_PROJECT_PRODUCTION_URL` → `http://localhost:3000`.
+The site has no domain yet, so the fallback is honest rather than a made-up host: set the env var
+when it lands somewhere and every absolute URL follows.
+
+Four PNGs under `src/app/`, picked up by filename: `icon.png` (512², 4.7 kB), `apple-icon.png`
+(180², 1.5 kB), `opengraph-image.png` and `twitter-image.png` (1200×630, 52 kB each, same bytes).
+They are **generated, not drawn** — `tools/brand/` holds the HTML sources and the renderer, and
+reuses the site's own materials: the mark is the vessel path from the menu's build diagrams, the
+colours are the Tailwind palette, the card is set in Playfair Display and DM Sans. See
+`tools/brand/README.md` to regenerate.
+
+Verified against `next dev`: `og:image`, `twitter:image`, both `theme-color` variants and the
+`icon` / `apple-touch-icon` links are all in the served HTML, and all four image routes return 200
+with `image/png`. A build in a throwaway copy lists them as static routes and leaves `/` at 57.3 kB.
 
 ### Acceptance criteria — Phase 5
 
@@ -1105,7 +1126,7 @@ items promoted into this queue rather than renumbered — follow their own secti
 | 2 | ~~**7.1** Map has no WebGL fallback~~ | **done** 2026-09-17 | P1 | S | `WeeklyLocations.tsx` |
 | 3 | ~~**7.2** Session-5 invariants are untested~~ | **done** 2026-09-17 | P1 | M | `tests/`, `package.json` |
 | 4 | ~~**6.1** Seamless marquee loop~~ | **done** 2026-09-17 | P2 | S | `CoffeeMenu.tsx` |
-| 5 | **5.7** Favicon and link metadata | existing, re-framed | P2 | S | `layout.tsx`, `src/app/` |
+| 5 | ~~**5.7** Favicon and link metadata~~ | **done** 2026-09-17 | P2 | S | `layout.tsx`, `src/app/` |
 
 ### 7.0 Start with 5.4 — its blocker is gone
 
@@ -1209,13 +1230,17 @@ outside the valley"*. Reverted after.
 `tsconfig.json` gained `allowImportingTsExtensions` — Node needs the `.ts` in the import specifier,
 and TypeScript rejects it otherwise. Safe here because the project is `noEmit`.
 
-### Acceptance criteria — Phase 7
+### Acceptance criteria — Phase 7 — ALL MET (2026-09-17, session 6)
 
-- Footer hours and location hours agree by construction; changing one moves the other.
-- The Find Us card degrades to a usable placeholder without WebGL, with directions still reachable.
-- `npm test` runs green and fails loudly if a pour sum or a coordinate is edited wrongly.
-- The marquee loops with no visible seam at desktop width.
-- The site has a favicon and a non-blank link preview.
+- [x] Footer hours and location hours agree by construction; changing one moves the other.
+- [x] The Find Us card degrades to a usable placeholder without WebGL, with directions still
+      reachable.
+- [x] `npm test` runs green (14 tests) and fails loudly if a pour sum or a coordinate is edited
+      wrongly — both were broken on purpose to confirm it.
+- [x] The marquee loops with no visible seam: 0 px error at 390, 1440 and 2560.
+- [x] The site has a favicon and a non-blank link preview.
+
+Commits, in order: `5da0312` (5.4), `1f40dd5` (7.1), `facb58a` (7.2), `5a9fd45` (6.1), and 5.7.
 
 ---
 

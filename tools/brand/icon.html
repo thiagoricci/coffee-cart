@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8">
+<style>html,body{margin:0;padding:0;background:#2C1810}svg{display:block}</style>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#2C1810"/>
+  <defs>
+    <!-- The same vessel the menu's build diagrams are drawn in, out of its 100x112 box. -->
+    <path id="cup" d="M20,22 L80,22 L70,78 Q68,86 60,86 L40,86 Q32,86 30,78 Z"/>
+    <clipPath id="inside" clipPathUnits="userSpaceOnUse"><use href="#cup"/></clipPath>
+  </defs>
+  <g transform="translate(256,268) scale(4.6) translate(-50,-54)">
+    <use href="#cup" fill="#F5F0E8"/>
+    <g clip-path="url(#inside)">
+      <rect x="18" y="22" width="64" height="19" fill="#C4841D"/>
+    </g>
+    <!-- Lip, so it reads as a vessel and not a wedge at 32 px. -->
+    <rect x="14" y="14.5" width="72" height="7.5" rx="3.75" fill="#F5F0E8"/>
+  </g>
+</svg>
