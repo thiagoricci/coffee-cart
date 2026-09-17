@@ -35,31 +35,36 @@ anything earlier except where noted.
 - **3.1's area darkening** — scrims and pools were tried four ways, all measured, all rejected on
   looks. The shipped hero trades AA for imagery deliberately. Read *Final state* under 3.1.
 
-**Nothing is committed.** All work is uncommitted on `main`, and `public/coffee-frames/`,
-`public/coffee-frames-portrait/` and this file are untracked.
+**Everything is committed and pushed** to `origin/main` as of 2026-09-17 (session 4). See
+*Git state* below — the repo history was also rewritten to purge the original PNGs.
 
 ### Git state — read this before doing anything
 
-Everything below is **uncommitted**, sitting on `main`:
+`main` is clean and in sync with `origin/main`. Three commits landed on 2026-09-17:
 
 ```
- D public/ezgif-frame-001.png … ezgif-frame-040.png   (40 deleted PNGs, still in git history)
- M src/components/CoffeeScroll.tsx                    (Phase 1 loader + 2.4 CLS fix + 1.2b frame sets)
-?? public/coffee-frames/                              (40 new .webp — UNTRACKED, easy to lose)
-?? public/coffee-frames-portrait/                     (40 cropped .webp — UNTRACKED, easy to lose)
-?? plan.md                                            (this file — UNTRACKED)
+a84c000 docs: add the phased UI improvement plan
+b3fb21f fix(locations): derive week dates from the clock, read client-side only
+d9ca86f perf(hero): serve WebP frame sets, fix CLS, and tighten scroll pacing
 ```
 
-Also modified **before** this work began, and not reviewed or touched by it:
-`package.json`, `src/app/globals.css`, `src/app/page.tsx`, `src/components/CartShowcase.tsx`,
-`src/components/CoffeeMenu.tsx`, `src/components/CoffeeScroll.tsx`,
-`src/components/WeeklyLocations.tsx`.
+**History was rewritten.** The 40 original `public/ezgif-frame-*.png` were purged from every commit
+with `git filter-branch --index-filter`, and `main` was force-pushed. A fresh clone is now 4.5 MB
+(was ~28 MB); `.git` locally is 4.6 MB. A stale Kilo Code worktree at `.kilo/worktrees/swift-lathe`,
+pinned to the pre-rewrite `e9e9e1e`, was removed — it was the only thing holding the old objects.
 
-> ⚠️ `public/coffee-frames/` and `public/coffee-frames-portrait/` are untracked and are the *only*
-> copies of the optimised frames. The PNGs it
-> replaced are recoverable from git (`git checkout e9e9e1e -- public/`), but the WebPs are not.
-> **Commit or back them up first.** Regenerating them costs ~1 minute — the exact command is in
-> *Reproducing the work* at the bottom.
+> ⚠️ Consequences, in order of how likely they are to bite:
+> 1. **Every commit SHA before 2026-09-17 changed.** `e9e9e1e`, `d42599e` and friends are gone.
+>    Anything quoting an old SHA — including earlier sections of this file — is stale.
+> 2. **Any clone made before the rewrite has diverged** and must be re-cloned, not pulled.
+> 3. **The original PNGs exist in exactly one place**:
+>    `/Users/thiagoricci/Downloads/Projects/coffee-cart-pre-purge.bundle` (28 MB, full pre-rewrite
+>    history). Restore with `git clone coffee-cart-pre-purge.bundle`. Do not delete it until the
+>    PNGs are definitely unwanted — `git checkout <old-sha> -- public/` no longer works.
+
+Note: GitHub may keep the purged objects server-side until its own GC runs. They are unreachable
+from any ref and absent from fresh clones, but do not treat the purge as a way of unpublishing
+something secret.
 
 ### Do this next
 
